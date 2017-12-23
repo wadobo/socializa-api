@@ -1,0 +1,7 @@
+Django==2.0
+coverage==4.4.2
+django-nose==1.4.5
+django-oauth-toolkit==1.0.0
+djangorestframework==3.7.3
+git+https://github.com/Virako/django-rest-framework-social-oauth2
+psycopg2==2.7.3.2
