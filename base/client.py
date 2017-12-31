@@ -50,6 +50,12 @@ class BaseClient(Client):
                            content_type='application/json',
                            HTTP_AUTHORIZATION=self.auth_token)
 
+    def patch(self, url, data={}):
+        return super().patch(self.base_url + self.version + url,
+                           json.dumps(data),
+                           content_type='application/json',
+                           HTTP_AUTHORIZATION=self.auth_token)
+
     def delete(self, url, data={}):
         return super().delete(self.base_url + self.version + url,
                               json.dumps(data),
