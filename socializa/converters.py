@@ -4,6 +4,6 @@ class VersionConverter:
     def to_python(self, value):
         version = float(value)
         return version
-    
+
     def to_url(self, value):
         return str(value)

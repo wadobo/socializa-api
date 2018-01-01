@@ -3,7 +3,6 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 from factory import (
-    Factory,
     Faker,
     LazyAttribute,
     LazyFunction,

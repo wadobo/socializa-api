@@ -4,8 +4,7 @@ from django.core.management import call_command
 from rest_framework.test import APITestCase
 
 from base.client import BaseClient
-from .factories import NPCFactory, PCFactory, UserFactory
-from .models import Character
+from .factories import NPCFactory, PCFactory
 from .models import NonPlayerCharacter
 from .models import PlayerCharacter
 from .serializers import PCSerializer
@@ -19,7 +18,7 @@ class CharacterTestCase(APITestCase):
                                       password='qweqweqwe',
                                       email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)  # Check last version
+        self.client = BaseClient(version=settings.VERSION)
         self.pc = PCFactory.create()
         self.npc = NPCFactory.create()
 

@@ -38,25 +38,33 @@ class BaseClient(Client):
                            content_type='application/json',
                            HTTP_AUTHORIZATION=self.auth_token)
 
-    def post(self, url, data={}):
+    def post(self, url, data=None):
+        if data is None:
+            data = {}
         return super().post(self.base_url + self.version + url,
                             json.dumps(data),
                             content_type='application/json',
                             HTTP_AUTHORIZATION=self.auth_token)
 
-    def put(self, url, data={}):
+    def put(self, url, data=None):
+        if data is None:
+            data = {}
         return super().put(self.base_url + self.version + url,
                            json.dumps(data),
                            content_type='application/json',
                            HTTP_AUTHORIZATION=self.auth_token)
 
-    def patch(self, url, data={}):
+    def patch(self, url, data=None):
+        if data is None:
+            data = {}
         return super().patch(self.base_url + self.version + url,
-                           json.dumps(data),
-                           content_type='application/json',
-                           HTTP_AUTHORIZATION=self.auth_token)
+                             json.dumps(data),
+                             content_type='application/json',
+                             HTTP_AUTHORIZATION=self.auth_token)
 
-    def delete(self, url, data={}):
+    def delete(self, url, data=None):
+        if data is None:
+            data = {}
         return super().delete(self.base_url + self.version + url,
                               json.dumps(data),
                               content_type='application/json',

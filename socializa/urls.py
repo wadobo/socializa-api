@@ -19,7 +19,6 @@ from django.urls import (
     path,
     register_converter
 )
-from rest_framework.reverse import reverse
 
 from socializa.converters import VersionConverter
 
