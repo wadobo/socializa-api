@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/wadobo/socializa-api.svg?branch=master)](https://travis-ci.org/wadobo/socializa-api) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9f6c22fb121f4dbbaecfa069e69435b4)](https://www.codacy.com/app/Wadobo/socializa-api?utm_source=github.com&utm_medium=referral&utm_content=wadobo/socializa-api&utm_campaign=badger)
+[![Build Status](https://travis-ci.org/wadobo/socializa-api.svg?branch=master)](https://travis-ci.org/wadobo/socializa-api) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9f6c22fb121f4dbbaecfa069e69435b4)](https://www.codacy.com/app/Wadobo/socializa-api?utm_source=github.com&utm_medium=referral&utm_content=wadobo/socializa-api&utm_campaign=badger) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/15223f974b0a409fb4bb858f1192b185)](https://www.codacy.com/app/Wadobo/socializa-api?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=wadobo/socializa-api&amp;utm_campaign=Badge_Coverage)
 
 # socializa-api
 
