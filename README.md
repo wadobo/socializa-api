@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/wadobo/socializa-api.svg?branch=master)](https://travis-ci.org/wadobo/socializa-api) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9f6c22fb121f4dbbaecfa069e69435b4)](https://www.codacy.com/app/Wadobo/socializa-api?utm_source=github.com&utm_medium=referral&utm_content=wadobo/socializa-api&utm_campaign=badger)
+
 # socializa-api
 
 Socializa is an interactive game for play it out of home
