@@ -13,13 +13,6 @@ from .serializers import NPCSerializer
 
 class CharacterListCreate(generics.ListCreateAPIView):
 
-    def get_queryset(self):
-        return PlayerCharacter.objects.all()
-
-    def get_serializer_class(self):
-        return PCSerializer
-
-
     def create(self, request, version, *args, **kwargs):
         character_type = request.data.pop('type')
         try:
@@ -31,16 +24,13 @@ class CharacterListCreate(generics.ListCreateAPIView):
         return Response('Character created', status=drf_status.HTTP_201_CREATED)
 
     def list(self, request, version, *args, **kwargs):
+        pc = PlayerCharacter.objects.filter(**request.data)
         npc = NonPlayerCharacter.objects.filter(**request.data)
-        pc = NonPlayerCharacter.objects.filter(**request.data)
         characters = PCSerializer(pc, many=True).data + NPCSerializer(npc, many=True).data
         return Response(characters)
 
 
 class CharacterDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PlayerCharacter.objects.all()
-    serializer_class = PCSerializer
-
 
     def destroy(self, request, version, pk, *args, **kwargs):
         character_type = request.data.get('type', None)
@@ -53,13 +43,18 @@ class CharacterDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
     def update(self, request, version, pk, *args, **kwargs):
-        return Response()
+        character_type = request.data.pop('type', None)
+        if not character_type:
+            return Response(status=drf_status.HTTP_400_BAD_REQUEST)
+        character = globals()[character_type].objects.filter(pk=pk)
+        if not character.update(**request.data):
+            return Response(status=drf_status.HTTP_400_BAD_REQUEST)
+        return Response(character_serializer(character.first()))
 
     def retrieve(self, request, version, pk, *args, **kwargs):
         character_type = request.query_params.get('type', None)
         if not character_type:
             return Response(status=drf_status.HTTP_400_BAD_REQUEST)
-
         try:
             character = globals()[character_type].objects.get(pk=pk)
         except:

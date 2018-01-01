@@ -1,0 +1,32 @@
+dist: trusty
+sudo: required
+
+group: deprecated-2017Q2
+
+services:
+  - postgresql
+addons:
+    postgresql: "9.5"
+    apt:
+      packages:
+        - postgresql-9.5-postgis-2.3
+    sonarqube:
+        branches:
+          - master
+before_script:
+  - psql -U postgres -c "create user socializa password 'socializa'"
+  - psql -U postgres -c "create database test_socializa owner socializa"
+  - psql -U postgres -d test_socializa -c "create extension postgis"
+  - psql -U postgres -c "ALTER USER socializa CREATEDB"
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install:
+  - pip install -r requirements.txt
+  - pip install codacy-coverage
+script:
+  - coverage run --branch --source=. ./manage.py test --keepdb --with-xunit
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml

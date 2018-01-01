@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.management import call_command
 from rest_framework.test import APITestCase
 
 from base.client import BaseClient
@@ -12,9 +14,11 @@ from .serializers import NPCSerializer
 
 class CharacterTestCase(APITestCase):
 
-    fixtures = ['applications.json']
-
     def setUp(self):
+        User.objects.create_superuser(username='me@socializa.com',
+                                      password='qweqweqwe',
+                                      email='me@socializa.com')
+        call_command('socialapps')
         self.client = BaseClient(version=settings.VERSION)  # Check last version
         self.pc = PCFactory.create()
         self.npc = NPCFactory.create()
@@ -51,16 +55,18 @@ class CharacterTestCase(APITestCase):
     def test_character_list(self):
         response = self.client.get('/character/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 2)  # npc + pc
-        self.assertEqual(response.json()[0], PCSerializer(self.pc).data)
+        self.assertEqual(len(response.json()), 2)  # pc + npc
+        self.assertEqual(response.json(), [PCSerializer(self.pc).data, NPCSerializer(self.npc).data])
 
-    def character_update(self, character_type, pk):
+    def character_update(self, character, serializer):
+        character_type = character.__class__.__name__
         data = {
             'type': character_type,
             'position': None
         }
-        response = self.client.patch('/character/{0}/'.format(pk), data)
+        response = self.client.patch('/character/{0}/'.format(character.pk), data)
         self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response.json(), serializer(character, many=False).data)
 
     def character_retrieve(self, character, serializer):
         character_type = character.__class__.__name__
@@ -69,9 +75,11 @@ class CharacterTestCase(APITestCase):
         self.assertEqual(response.json(), serializer(character, many=False).data)
 
     def character_destroy(self, character_type, pk):
+        self.assertEqual(globals()[character_type].objects.count(), 1)
         data = {'type': character_type}
         response = self.client.delete('/character/{0}/'.format(pk), data)
         self.assertEqual(response.status_code, 204)
+        self.assertEqual(globals()[character_type].objects.count(), 0)
 
     def test_pc_retrieve(self):
         self.character_retrieve(self.pc, PCSerializer)
@@ -80,10 +88,10 @@ class CharacterTestCase(APITestCase):
         self.character_retrieve(self.npc, NPCSerializer)
 
     def test_pc_update(self):
-        self.character_update('PlayerCharacter', self.pc.pk)
+        self.character_update(self.pc, PCSerializer)
 
     def test_npc_update(self):
-        self.character_update('NonPlayerCharacter', self.npc.pk)
+        self.character_update(self.npc, NPCSerializer)
 
     def test_pc_destroy(self):
         self.character_destroy('PlayerCharacter', self.pc.pk)

@@ -5,13 +5,13 @@ from .models import NonPlayerCharacter as NPC
 from .models import PlayerCharacter as PC
 
 
-class PCSerializer(serializers.Serializer):
+class PCSerializer(serializers.ModelSerializer):
     class Meta:
         model = PC
         fields = ('pk', 'user', 'position')
 
 
-class NPCSerializer(serializers.Serializer):
+class NPCSerializer(serializers.ModelSerializer):
     class Meta:
         model = NPC
         fields = ('pk', 'user', 'position')
