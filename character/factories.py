@@ -10,8 +10,8 @@ from factory import (
 )
 from faker import Faker as faker_Faker
 
-from .models import NonPlayerCharacter
-from .models import PlayerCharacter
+from .models import NPC
+from .models import Player
 
 
 class UserFactory(DjangoModelFactory):
@@ -30,15 +30,15 @@ def new_position(self):
 
 class NPCFactory(DjangoModelFactory):
     class Meta:
-        model = NonPlayerCharacter
+        model = NPC
 
     user = SubFactory(UserFactory)
-    position = LazyAttribute(new_position)
+    #position = LazyAttribute(new_position)
 
 
-class PCFactory(DjangoModelFactory):
+class PlayerFactory(DjangoModelFactory):
     class Meta:
-        model = PlayerCharacter
+        model = Player
 
     user = SubFactory(UserFactory)
-    position = LazyAttribute(new_position)
+    #position = LazyAttribute(new_position)

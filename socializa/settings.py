@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
 
     'django_nose',
     'rest_framework',
@@ -47,6 +48,13 @@ INSTALLED_APPS = [
 
     'base',
     'character',
+    'game',
+    'owner',
+    'notification',
+    'things',
+    'properties',
+    'contents',
+    'interaction',
 ]
 
 MIDDLEWARE = [
