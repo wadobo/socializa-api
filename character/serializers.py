@@ -1,25 +1,25 @@
 from rest_framework import serializers
 
 from .models import Character
-from .models import NonPlayerCharacter as NPC
-from .models import PlayerCharacter as PC
+from .models import NPC
+from .models import Player
 
 
-class PCSerializer(serializers.ModelSerializer):
+class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PC
-        fields = ('pk', 'user', 'position')
+        model = Player
+        fields = ('pk', 'user')
 
 
 class NPCSerializer(serializers.ModelSerializer):
     class Meta:
         model = NPC
-        fields = ('pk', 'user', 'position')
+        fields = ('pk', 'user')
 
 
 def character_serializer(character):
-    if isinstance(character, PC):
-        return PCSerializer(character).data
+    if isinstance(character, Player):
+        return PlayerSerializer(character).data
     elif isinstance(character, NPC):
         return NPCSerializer(character).data
     else:

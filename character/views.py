@@ -8,10 +8,10 @@ from rest_framework.status import (
 )
 from rest_framework.response import Response
 
-from .models import PlayerCharacter
-from .models import NonPlayerCharacter
+from .models import Player
+from .models import NPC
 from .serializers import character_serializer
-from .serializers import PCSerializer
+from .serializers import PlayerSerializer
 from .serializers import NPCSerializer
 
 
@@ -28,9 +28,9 @@ class CharacterListCreate(generics.ListCreateAPIView):
         return Response('Character created', status=ST_201)
 
     def list(self, request, version, *args, **kwargs):
-        pc = PlayerCharacter.objects.filter(**request.data)
-        npc = NonPlayerCharacter.objects.filter(**request.data)
-        characters = PCSerializer(pc, many=True).data + NPCSerializer(npc, many=True).data
+        pc = Player.objects.filter(**request.data)
+        npc = NPC.objects.filter(**request.data)
+        characters = PlayerSerializer(pc, many=True).data + NPCSerializer(npc, many=True).data
         return Response(characters)
 
 
