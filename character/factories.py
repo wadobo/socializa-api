@@ -6,6 +6,7 @@ from factory import (
     Faker,
     LazyAttribute,
     LazyFunction,
+    PostGenerationMethodCall,
     SubFactory
 )
 from faker import Faker as faker_Faker
@@ -19,6 +20,7 @@ class UserFactory(DjangoModelFactory):
         model = User
 
     username = Faker('email')
+    password = PostGenerationMethodCall('set_password', 'qweqweqwe')
     email = LazyAttribute(lambda u: u.username)
     date_joined = LazyFunction(timezone.now)
 

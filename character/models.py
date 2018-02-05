@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry
 
 
 class Character(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='%(class)s')
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
+            related_name='%(app_label)s_%(class)s')
 
     class Meta:
         abstract = True
