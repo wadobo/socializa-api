@@ -1,13 +1,5 @@
-from django.contrib.auth.models import User
-from django.utils import timezone
 from factory.django import DjangoModelFactory
-from factory import (
-    Faker,
-    LazyAttribute,
-    LazyFunction,
-    SubFactory
-)
-from faker import Faker as faker_Faker
+from factory import SubFactory
 
 from .models import Game
 from .models import Preference
