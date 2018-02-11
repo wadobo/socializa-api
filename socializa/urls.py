@@ -31,5 +31,6 @@ urlpatterns = [
         path('social/', include('rest_framework_social_oauth2.urls')),
         path('character/', include('character.urls')),
         path('game/', include('game.urls')),
+        path('thing/', include('things.urls')),
     ])),
 ]
