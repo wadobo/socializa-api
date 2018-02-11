@@ -1,5 +1,4 @@
 from factory.django import DjangoModelFactory
-from factory import SubFactory
 
 from .models import Item
 from .models import Knowledge
