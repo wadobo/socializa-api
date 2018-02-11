@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
 
+    'rest_framework_swagger',
     'django_nose',
     'rest_framework',
     'oauth2_provider',

@@ -16,6 +16,7 @@ from .serializers import NPCSerializer
 
 
 class CharacterListCreate(generics.ListCreateAPIView):
+    serializer_class = PlayerSerializer
 
     def create(self, request, version, *args, **kwargs):
         character_type = request.data.pop('type')
@@ -35,6 +36,7 @@ class CharacterListCreate(generics.ListCreateAPIView):
 
 
 class CharacterDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = PlayerSerializer
 
     def destroy(self, request, version, pk, *args, **kwargs):
         character_type = request.data.get('type', None)

@@ -16,6 +16,7 @@ from .serializers import GameSerializer
 
 
 class GameListCreate(generics.ListCreateAPIView):
+    serializer_class = GameSerializer
 
     def create(self, request, version, *args, **kwargs):
         # TODO: authentication
@@ -40,11 +41,12 @@ class GameListCreate(generics.ListCreateAPIView):
 
     def list(self, request, version, *args, **kwargs):
         games = Game.objects.filter(**request.data)
-        games = GameSerializer(games, many=True).data
-        return Response(games)
+        serializer = GameSerializer(games, many=True)
+        return Response(serializer.data)
 
 
 class GameDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = GameSerializer
 
     def destroy(self, request, version, pk, *args, **kwargs):
         if request.user.is_anonymous:

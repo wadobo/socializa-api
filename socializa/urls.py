@@ -19,14 +19,17 @@ from django.urls import (
     path,
     register_converter
 )
+from rest_framework_swagger.views import get_swagger_view
 
 from socializa.converters import VersionConverter
 
 
 register_converter(VersionConverter, 'ver')
+schema_view = get_swagger_view(title='Socializa API')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('doc/', schema_view),
     path('api/v<ver:version>/', include([
         path('social/', include('rest_framework_social_oauth2.urls')),
         path('character/', include('character.urls')),
