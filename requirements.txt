@@ -1,8 +1,7 @@
-Django==2.0
-coverage==4.4.2
-django-nose==1.4.5
-django-oauth-toolkit==1.0.0
-djangorestframework==3.7.3
-factory-boy==2.9.2
-git+https://github.com/Virako/django-rest-framework-social-oauth2
-psycopg2==2.7.3.2
+Django==2.1.4
+django-nose==1.4.6
+django-oauth-toolkit==1.2.0
+djangorestframework==3.9.0
+factory-boy==2.11.1
+django-rest-framework-social-oauth2==1.1.0
+psycopg2-binary==2.7.6.1

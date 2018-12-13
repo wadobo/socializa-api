@@ -20,11 +20,9 @@ before_script:
   - psql -U postgres -c "ALTER USER socializa CREATEDB"
 language: python
 python:
-  - "3.4"
-  - "3.5"
   - "3.6"
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
   - pip install codacy-coverage
 script:
   - coverage run --branch --source=. ./manage.py test --keepdb --with-xunit

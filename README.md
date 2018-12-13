@@ -28,6 +28,7 @@ You need permission for create test database:
 
     sudo su - postgres
     psql -c "create database test_socializa owner socializa"
+    psql -d test_socializa -c "create extension postgis"
     psql test_socializa
     ALTER USER socializa CREATEDB;
 
