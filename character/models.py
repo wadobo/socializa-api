@@ -4,6 +4,11 @@ from django.contrib.gis.db import models
 
 
 class Character(models.Model):
+    """
+    This model will be used for the characters of the game, where we will
+    distinguish between two classes, Player and NPC.
+    """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE,
             related_name='%(app_label)s_%(class)s')
 
@@ -23,8 +28,18 @@ class Character(models.Model):
 
 
 class Player(Character):
+    """
+    This model represents a real person in the game. A player will have a
+    related user to play with.
+    """
+
     pass
 
 
 class NPC(Character):
+    """
+    This model represents a non-real player, it will be controlled by an AI or
+    actor.
+    """
+
     pass

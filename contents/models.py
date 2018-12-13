@@ -8,6 +8,11 @@ from game.models import Game
 
 
 class Content(models.Model):
+    """
+    This model represents the position on a map of a content that is composed:
+    a Game, a Character and a Thing.
+    """
+
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="contents")
     content_type = models.ForeignKey(ContentType,
             on_delete=models.CASCADE,
