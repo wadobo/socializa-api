@@ -20,8 +20,6 @@ before_script:
   - psql -U postgres -c "ALTER USER socializa CREATEDB"
 language: python
 python:
-  - "3.4"
-  - "3.5"
   - "3.6"
 install:
   - pip install -r requirements-dev.txt
