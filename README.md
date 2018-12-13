@@ -32,3 +32,23 @@ You need permission for create test database:
     ALTER USER socializa CREATEDB;
 
     ./manage.py test --keepdb
+
+# Docker
+
+In deploy/docker/:
+
+## You need configured your .env file
+
+## Build the containers
+    docker-compose up --build
+
+## Create database
+    docker exec -ti --user postgres socializa-postgres bash
+    psql
+    CREATE USER socializa PASSWORD 'socializa';
+    ALTER ROLE socializa WITH SUPERUSER;
+    CREATE DATABASE socializa WITH OWNER socializa;
+
+## Apply migrations 
+    docker exec -ti --user postgres socializa-postgres bash
+    ./manage.py migrate

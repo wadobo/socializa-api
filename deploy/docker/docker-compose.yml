@@ -1,0 +1,35 @@
+version: '3.4'
+
+services:
+  socializa-postgres:
+    restart: always
+    container_name: socializa-postgres
+    image: mdillon/postgis
+    volumes:
+      - socializa-postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+
+  socializa-api:
+    restart: always
+    container_name: socializa-api
+    image: socializa-api
+    build:
+      context: ${SOCIALIZA_PATH}
+      dockerfile: Dockerfile-dev
+    command: ./manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - socializa-postgres
+    user: "1000:1000"
+    volumes:
+      - ${SOCIALIZA_PATH}:/app
+
+volumes:
+  socializa-postgres:
+    name: socializa-postgres
