@@ -7,6 +7,11 @@ from game.models import Game
 
 
 class Property(models.Model):
+    """
+    Represents the ownership relationship between things and players or things
+    and NPCs.
+    """
+
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="properties")
     character_type = models.ForeignKey(ContentType,
             on_delete=models.CASCADE,

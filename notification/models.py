@@ -8,6 +8,11 @@ from game.models import Game
 
 
 class Notification(models.Model):
+    """
+    In this model we will save the notifications received by the users, which
+    will be when: they interact with the player, receive objects or knowledge.
+    """
+
     character_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,
             limit_choices_to=models.Q(app_label='character'))
     character_id = models.PositiveIntegerField()
