@@ -1,4 +1,3 @@
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.response import Response
@@ -7,11 +6,10 @@ from rest_framework.status import (
         HTTP_201_CREATED as ST_201,
         HTTP_204_NO_CONTENT as ST_204,
         HTTP_401_UNAUTHORIZED as ST_401,
-        HTTP_409_CONFLICT as ST_409
 )
 
 from owner.models import Owner
-from .models import Game, Preference
+from .models import Game
 from .serializers import GameSerializer
 
 
@@ -21,20 +19,10 @@ class GameListCreate(generics.ListCreateAPIView):
         # TODO: authentication
         if request.user.is_anonymous:
             return Response('', status=ST_401)
-        player = request.user.character_player
-        try:
-            preferences = Preference(**request.data.pop('preferences'))
-            preferences.save()
-        except IntegrityError:
-            return Response('Error try to create game', status=ST_409)
-        try:
-            game = Game(**request.data)
-            game.preferences = preferences
-            game.save()
-        except IntegrityError:
-            return Response('Error try to create game', status=ST_409)
-
-        owner = Owner(player=player, game=game)
+        ser = GameSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        game = ser.save()
+        owner = Owner(player=request.user.character_player, game=game)
         owner.save()
         return Response('Game created', status=ST_201)
 
@@ -46,27 +34,22 @@ class GameListCreate(generics.ListCreateAPIView):
 
 class GameDetail(generics.RetrieveUpdateDestroyAPIView):
 
+    def get_queryset(self):
+        player = self.request.user.character_player
+        return Game.objects.filter(owners__in=player.owners.all())
+
     def destroy(self, request, version, pk, *args, **kwargs):
         if request.user.is_anonymous:
             return Response('', status=ST_401)
-        player = request.user.character_player
-        game = get_object_or_404(Game, pk=pk)
-        get_object_or_404(Owner, player=player, game=game)
-        game.delete()
+        self.get_object().delete()
         return Response(status=ST_204)
 
     def update(self, request, version, pk, *args, **kwargs):
         if request.user.is_anonymous:
             return Response('', status=ST_401)
-        player = request.user.character_player
-        game = get_object_or_404(Game, pk=pk)
-        get_object_or_404(Owner, player=player, game=game)
-        for field, value in request.data.pop('preferences').items():
-            setattr(game.preferences, field, value)
-        for field, value in request.data.items():
-            setattr(game, field, value)
-        game.preferences.save()
-        game.save()
+        ser = GameSerializer(self.get_object(), data=request.data)
+        ser.is_valid(raise_exception=True)
+        ser.save()
         return Response('Game updated', status=ST_200)
 
     def retrieve(self, request, version, pk, *args, **kwargs):
