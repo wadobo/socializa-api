@@ -1,14 +1,19 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from .factories import GameFactory
 from .models import Game
 from .serializers import GameSerializer
 from base.client import BaseClient
+from character.models import Player
 from character.factories import PlayerFactory
+from contents.models import Content
 from owner.models import Owner
+from things.models import Item
 
 
 class GameTestCase(APITestCase):
@@ -127,3 +132,99 @@ class GameTestCase(APITestCase):
             if key in ['start', 'end']:
                 field = field.isoformat()
             self.assertEqual(field, value)
+
+
+class GameContentTestCase(APITestCase):
+
+    def setUp(self):
+        User.objects.create_superuser(username='me@socializa.com',
+                                      password='qweqweqwe',
+                                      email='me@socializa.com')
+        call_command('socialapps')
+        self.client = BaseClient(version=settings.VERSION)
+        self.player = PlayerFactory.create()
+        self.ct_player = ContentType.objects.get(model='player').pk
+        self.ct_npc = ContentType.objects.get(model='npc').pk
+        self.ct_item = ContentType.objects.get(model='item').pk
+        self.ct_knowledge = ContentType.objects.get(model='knowledge').pk
+        self.ct_rol = ContentType.objects.get(model='rol').pk
+
+    def tearDown(self):
+        self.client = None
+        User.objects.all().delete()
+        Player.objects.all().delete()
+
+    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
+        response = self.client.authenticate(username, pwd)
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_game_contents(self):
+        self.authenticate(username=self.player.user.username)
+
+        # Create game complete: contents
+        ## Create item
+        data = {
+            'name': 'Item',
+            'description': 'Item description',
+            'shareable': True,
+            'pickable': True,
+            'consumable': True,
+        }
+        response = self.client.post('/thing/item/', data)
+        self.assertEqual(response.status_code, 201)
+        item = Item.objects.last()
+
+        ## Create game with contents
+        data = {
+            'title': 'My game',
+            'description': 'Example game',
+            'start': timezone.now().isoformat(),
+            'preferences': {
+                'vision_distance': 100,
+                'meeting_distance': 10,
+                'visible_character': True
+            },
+            'contents': [
+                {  # New, item
+                    'content_type': self.ct_item,
+                    'content_id': 0,
+                    'content': {
+                        'name': 'key',
+                        'description': 'key number 1',
+                        'pickable': True,
+                        'shareable': False,
+                        'consumable': False,
+                    },
+                    'position': {
+                        'longitude': 37.241421,
+                        'latitude': -6.9447224
+                    },
+                },
+                {  # New, knowledge
+                    'content_type': self.ct_item,
+                    'content_id': 0,
+                    'content': {
+                        'name': 'Confidential information',
+                        'description': 'This information is private and important.',
+                        'pickable': True,
+                        'shareable': False,
+                        'consumable': False,
+                    },
+                    'position': {
+                        'longitude': 37.221421,
+                        'latitude': -6.9447224
+                    },
+                },
+                {  # Exist, Item
+                    'content_type': ContentType.objects.get_for_model(item).pk,
+                    'content_id': item.pk,
+                    'position': {
+                        'longitude': 37.201421,
+                        'latitude': -6.9447224
+                    },
+                },
+            ]
+        }
+        response = self.client.post('/game/', data)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Content.objects.count(), 3)
