@@ -20,18 +20,6 @@ def get_serializer(model):
     return None
 
 
-#Serializar: el game solo pasar el ID
-
-# Deserializar: el game vendrá como objeto ya creado previamente, se creará desde game. no podremos
-# tocar esto de otra forma??? Bueno, si deberiamos de permitir tocar un Content y pasarle el
-# game_id, asi buscamos el game y se lo podemos pasar como objeto, y no sería necesario tocar un
-# juego entero que es más probable que falle
-    #position = models.PointField(null=True, blank=True)
-
-
-
-# Test game: check if pk or objects if not put game
-
 class ContentRelatedField(serializers.RelatedField):
     queryset = Content.objects.all()
 
@@ -54,6 +42,7 @@ class ContentRelatedField(serializers.RelatedField):
             return value
         else:
             return None
+
 
 class ContentSerializer(serializers.ModelSerializer):
     content = ContentRelatedField(required=False)

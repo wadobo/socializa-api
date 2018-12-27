@@ -24,6 +24,16 @@ class GameTestCase(APITestCase):
         self.owner = Owner(player=self.player, game=self.game)
         self.owner.save()
 
+        self.data = {
+            'title': 'Example',
+            'start': '2018-02-04T07:28:12.546030+00:00',
+            'preferences': {
+                'vision_distance': 100,
+                'meeting_distance': 20,
+                'visible_character': True
+            },
+        }
+
     def tearDown(self):
         self.client = None
 
@@ -32,62 +42,30 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_game_create_unauthorized(self):
-        data = {
-            'title': 'Example',
-            'start': '2018-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': 100,
-                'meeting_distance': 20,
-                'visible_character': True
-            }
-        }
-        response = self.client.post('/game/', data)
+        response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 401)
 
-    def test_game_create_bad_request(self):
-        data = {
-            'title': 'Example',
-            'start': '2018-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': 'bad',
-                'meeting_distance': 20,
-                'visible_character': True
-            }
-        }
+    def test_game_create_bad_request_1(self):
+        self.data['preferences']['vision_distance'] = 'bad'
         self.authenticate(username=self.player.user.username)
-        response = self.client.post('/game/', data)
+        response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('preferences' in response.json())
         self.assertTrue('vision_distance' in response.json().get('preferences'))
 
-        data = {
-            'title': 'Example',
-            'start': 'bad',
-            'preferences': {
-                'vision_distance': 100,
-                'meeting_distance': 20,
-                'visible_character': True
-            }
-        }
-        response = self.client.post('/game/', data)
+    def test_game_create_bad_request_2(self):
+        self.data['start'] = 'bad'
+        self.authenticate(username=self.player.user.username)
+        response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('start' in response.json())
 
     def test_game_create(self):
         games_amount = Game.objects.count()
         owners_amount = Owner.objects.count()
-        data = {
-            'title': 'Example',
-            'start': '2018-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': 100,
-                'meeting_distance': 20,
-                'visible_character': True
-            }
-        }
 
         self.authenticate(username=self.player.user.username)
-        response = self.client.post('/game/', data)
+        response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Game.objects.count(), games_amount + 1)
         self.assertEqual(Owner.objects.count(), owners_amount + 1)
@@ -117,64 +95,34 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 204)
 
     def test_game_update_unauthorized(self):
-        data = {
-            'title': 'Example 2',
-            'start': '2018-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': 80,
-                'meeting_distance': 40,
-                'visible_character': True
-            }
-        }
-        response = self.client.put('/game/{}/'.format(self.game.pk), data)
+        self.data['preferences']['vision_distance'] = 80
+        response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 401)
 
-    def test_game_update_bad_request(self):
+    def test_game_update_bad_request_1(self):
         self.authenticate(username=self.player.user.username)
-        data = {
-            'title': 'Example 2',
-            'start': '2019-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': True,
-                'meeting_distance': 40,
-                'visible_character': False
-            }
-        }
-        response = self.client.put('/game/{}/'.format(self.game.pk), data)
+        self.data['preferences']['vision_distance'] = True
+        response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('preferences' in response.json())
         self.assertTrue('vision_distance' in response.json().get('preferences'))
 
-        data = {
-            'title': 'Example',
-            'start': 'bad',
-            'preferences': {
-                'vision_distance': 100,
-                'meeting_distance': 20,
-                'visible_character': True
-            }
-        }
-        response = self.client.put('/game/{}/'.format(self.game.pk), data)
+    def test_game_update_bad_request_2(self):
+        self.authenticate(username=self.player.user.username)
+        self.data['start'] = 'bad'
+        response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('start' in response.json())
 
     def test_game_update(self):
         self.authenticate(username=self.player.user.username)
-        data = {
-            'title': 'Example 2',
-            'start': '2019-02-04T07:28:12.546030+00:00',
-            'preferences': {
-                'vision_distance': 80,
-                'meeting_distance': 40,
-                'visible_character': False
-            }
-        }
-        response = self.client.put('/game/{}/'.format(self.game.pk), data)
+        self.data['preferences']['vision_distance'] = 80
+        response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 200)
         game_changed = Game.objects.get(pk=self.game.pk)
-        for key, value in data.pop('preferences').items():
+        for key, value in self.data.pop('preferences').items():
             self.assertEqual(getattr(game_changed.preferences, key), value)
-        for key, value in data.items():
+        for key, value in self.data.items():
             field = getattr(game_changed, key)
             if key in ['start', 'end']:
                 field = field.isoformat()
