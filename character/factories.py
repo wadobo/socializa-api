@@ -30,17 +30,19 @@ def new_position(self):
     return GEOSGeometry('POINT({0} {1})'.format(fake.latitude(), fake.longitude()))
 
 
-class NPCFactory(DjangoModelFactory):
+class CharacterFactory(DjangoModelFactory):
+    user = SubFactory(UserFactory)
+    #position = LazyAttribute(new_position)
+
+    class Meta:
+        abstract = True
+
+
+class NPCFactory(CharacterFactory):
     class Meta:
         model = NPC
 
-    user = SubFactory(UserFactory)
-    #position = LazyAttribute(new_position)
 
-
-class PlayerFactory(DjangoModelFactory):
+class PlayerFactory(CharacterFactory):
     class Meta:
         model = Player
-
-    user = SubFactory(UserFactory)
-    #position = LazyAttribute(new_position)

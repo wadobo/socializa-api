@@ -5,16 +5,21 @@ from .models import Knowledge
 from .models import Rol
 
 
-class ItemFactory(DjangoModelFactory):
+class ThingFactory(DjangoModelFactory):
+    class Meta:
+        abstract = True
+
+
+class ItemFactory(ThingFactory):
     class Meta:
         model = Item
 
 
-class KnowledgeFactory(DjangoModelFactory):
+class KnowledgeFactory(ThingFactory):
     class Meta:
         model = Knowledge
 
 
-class RolFactory(DjangoModelFactory):
+class RolFactory(ThingFactory):
     class Meta:
         model = Rol
