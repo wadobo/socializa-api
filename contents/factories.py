@@ -4,7 +4,6 @@ from factory import LazyAttribute, SelfAttribute, SubFactory
 
 from .models import Content
 from character.factories import NPCFactory, PlayerFactory
-from game.factories import GameFactory
 from things.factories import ItemFactory, KnowledgeFactory, RolFactory
 
 

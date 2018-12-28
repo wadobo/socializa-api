@@ -1,5 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.geos import Point
 from drf_extra_fields.geo_fields import PointField
 from rest_framework import serializers
 

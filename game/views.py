@@ -1,14 +1,6 @@
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
-from rest_framework.response import Response
-from rest_framework.status import (
-        HTTP_200_OK as ST_200,
-        HTTP_201_CREATED as ST_201,
-        HTTP_204_NO_CONTENT as ST_204,
-        HTTP_401_UNAUTHORIZED as ST_401,
-)
 
 from .models import Game
 from .serializers import GameSerializer

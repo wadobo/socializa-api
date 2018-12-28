@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from .models import Character
 from .models import NPC
 from .models import Player
 
