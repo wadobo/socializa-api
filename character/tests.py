@@ -2,23 +2,28 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from rest_framework.test import APITestCase
+from urllib.parse import urlencode
 
 from base.client import BaseClient
-from .factories import NPCFactory, PlayerFactory
-from .models import NPC, Player
-from .serializers import NPCSerializer, PlayerSerializer
+from .factories import NPCFactory
+from .models import NPC
+from .serializers import NPCSerializer
 
 
-class CharacterTestCase(APITestCase):
+class NPCTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
+        self.user = User.objects.create_superuser(username='me@socializa.com',
+              password='qweqweqwe', email='me@socializa.com')
         call_command('socialapps')
         self.client = BaseClient(version=settings.VERSION)
-        self.player = PlayerFactory.create()
         self.npc = NPCFactory.create()
+        self.data = {
+            'user': {
+                'email': 'test@test.com',
+                'password': 'qwerty'
+            }
+        }
 
     def tearDown(self):
         self.client = None
@@ -27,64 +32,124 @@ class CharacterTestCase(APITestCase):
         response = self.client.authenticate(username, pwd)
         self.assertEqual(response.status_code, 200)
 
-    def test_character_login(self):
+    # CREATE
+    def character_create(self, ctype, data, st):
+        self.data.update(data)
+        response = self.client.post('/character/{}/'.format(ctype), self.data)
+        self.assertEqual(response.status_code, st)
+        return response
+
+    def test_npc_create_unauth(self):
+        self.character_create('npc', {}, 401)
+
+    def test_npc_create_bad_request(self):
         self.authenticate()
+        self.character_create('npc', {'user': {'password': 'qwerty'}}, 400)
+        data = {'user': {
+            'email': 'a',
+            'password': 'qwerty'
+        }}
+        self.character_create('npc', data, 400)
 
-    def character_register(self, character_type):
-        self.assertEqual(globals()[character_type].objects.count(), 1)
-        data = {
-            'email': 'test@socializa.com',
-            'password': 'qweqweqwe',
-            'type': character_type
-        }
-        response = self.client.post('/character/', data)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(globals()[character_type].objects.count(), 2)
-        response = self.client.post('/character/', data)
-        self.assertEqual(response.status_code, 409)
+    def test_npc_create_exist(self):
+        self.authenticate()
+        data = {'user': {
+            'email': self.user.email,
+            'password': 'qweqweqwe'
+        }}
+        self.character_create('npc', data, 400)
 
-    def test_player_register(self):
-        self.character_register('Player')
+    def test_npc_create(self):
+        initial_npc = NPC.objects.count()
+        initial_user = User.objects.count()
+        self.authenticate()
+        response = self.character_create('npc', {}, 201)
+        self.assertEqual(initial_npc + 1, NPC.objects.count())
+        self.assertEqual(initial_user + 1, User.objects.count())
+        self.assertFalse('password' in response.json().get('user'))
 
-    def test_npc_register(self):
-        self.character_register('NPC')
+    # LIST
+    def character_list(self, ctype, st, params):
+        filters = '?{}'.format(urlencode(params)) if params else ''
+        response = self.client.get('/character/{0}/{1}'.format(ctype, filters))
+        self.assertEqual(response.status_code, st)
+        return response
 
-    def test_character_list(self):
-        response = self.client.get('/character/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 2)  # player + npc
-        self.assertEqual(response.json(), [PlayerSerializer(self.player).data, NPCSerializer(self.npc).data])
+    def test_npc_list_filter(self):
+        NPCFactory.create_batch(10)
+        params = {'search': 'gmail'}
+        response = self.character_list('npc', 200, params)
+        query = {'user__username__icontains': params.get('search')}
+        self.assertEqual(len(response.json()),
+                NPC.objects.filter(**query).count())
 
-    def character_update(self, character, serializer):
-        character_type = character.__class__.__name__
-        data = {
-            'type': character_type
-        }
-        response = self.client.patch('/character/{0}/'.format(character.pk), data)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(response.json(), serializer(character, many=False).data)
+    def test_npc_list(self):
+        response = self.character_list('npc', 200, None)
+        self.assertEqual(len(response.json()), 1)
 
-    def character_retrieve(self, character, serializer):
-        character_type = character.__class__.__name__
-        response = self.client.get('/character/{0}/?type={1}'.format(character.pk, character_type))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), serializer(character, many=False).data)
+    # DESTROY
+    def character_destroy(self, ctype, st, pk):
+        response = self.client.delete('/character/{0}/{1}/'.format(ctype, pk))
+        self.assertEqual(response.status_code, st)
+        return response
 
-    def character_destroy(self, character_type, pk):
-        self.assertEqual(globals()[character_type].objects.count(), 1)
-        data = {'type': character_type}
-        response = self.client.delete('/character/{0}/'.format(pk), data)
-        self.assertEqual(response.status_code, 204)
-        self.assertEqual(globals()[character_type].objects.count(), 0)
+    def test_npc_destroy_unauth(self):
+        self.character_destroy('npc', 401, self.npc.pk)
 
-    def test_player_retrieve(self):
-        self.character_retrieve(self.player, PlayerSerializer)
-
-    def test_npc_retrieve(self):
-        self.character_retrieve(self.npc, NPCSerializer)
-
-    def test_player_destroy(self):
-        self.character_destroy('Player', self.player.pk)
+    def test_npc_destroy_bad_request(self):
+        self.authenticate()
+        self.character_destroy('npc', 404, self.npc.pk + 1)
 
     def test_npc_destroy(self):
-        self.character_destroy('NPC', self.npc.pk)
+        initial_npc = NPC.objects.count()
+        initial_user = User.objects.count()
+        self.authenticate()
+        self.character_destroy('npc', 204, self.npc.pk)
+        self.assertEqual(initial_npc - 1, NPC.objects.count())
+        self.assertEqual(initial_user - 1, User.objects.count())
+
+    # RETRIEVE
+    def character_retrieve(self, ctype, st, pk):
+        response = self.client.get('/character/{0}/{1}/'.format(ctype, pk))
+        self.assertEqual(response.status_code, st)
+        return response
+
+    def test_npc_retrieve_bad_request(self):
+        self.character_retrieve('npc', 404, self.npc.pk + 1)
+
+    def test_npc_retrieve(self):
+        self.authenticate()
+        response = self.character_retrieve('npc', 200, self.npc.pk)
+        self.assertEqual(response.json(), NPCSerializer(self.npc).data)
+
+    # UPDATE
+    def character_update(self, ctype, data, st, pk):
+        self.data.update(data)
+        response = self.client.put('/character/{0}/{1}/'.format(ctype, pk),
+                self.data)
+        self.assertEqual(response.status_code, st)
+        return response
+
+    def test_npc_update_unauth(self):
+        self.character_update('npc', {}, 401, self.npc.pk)
+
+    def test_npc_update_bad_request(self):
+        self.authenticate()
+        self.character_update('npc', {}, 404, self.npc.pk + 1)
+        data = {
+            'user': {
+                'bad': 'bad'
+            }
+        }
+        self.character_update('npc', data, 400, self.npc.pk)
+
+    def test_npc_update(self):
+        self.authenticate()
+        data = {
+            'user': {
+                'username': 'other'
+            }
+        }
+        response = self.character_update('npc', data, 200, self.npc.pk)
+        self.assertEqual(response.json()['user']['username'],
+                data['user']['username'])
