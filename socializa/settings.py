@@ -238,8 +238,9 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Current version
+# Versions and current version
 
+VERSIONS = [1.0]
 VERSION = 1.0
 
 

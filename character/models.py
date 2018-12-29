@@ -4,9 +4,8 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 
 
-# User email will be unique and username not unique
+# User email will be unique
 User._meta.get_field('email')._unique = True
-User._meta.get_field('username')._unique = False
 
 
 class Character(models.Model):

@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import (
     include,
@@ -28,10 +29,12 @@ register_converter(VersionConverter, 'ver')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v<ver:version>/', include([
-        path('social/', include('rest_framework_social_oauth2.urls')),
         path('character/', include('character.urls')),
         path('content/', include('contents.urls')),
         path('game/', include('game.urls')),
         path('thing/', include('things.urls')),
     ])),
 ]
+for version in settings.VERSIONS:
+    urlpatterns.append(path('api/v{}/auth/'.format(version),
+            include('rest_framework_social_oauth2.urls')))
