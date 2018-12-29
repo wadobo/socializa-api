@@ -1,7 +1,6 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry
 from django.utils import timezone
 
 from game.models import Game

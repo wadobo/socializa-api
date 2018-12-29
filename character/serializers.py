@@ -1,20 +1,27 @@
 from rest_framework import serializers
 
-from .models import Character
 from .models import NPC
 from .models import Player
 
 
-class PlayerSerializer(serializers.ModelSerializer):
+class CharacterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        abstract = True
+
+
+class PlayerSerializer(CharacterSerializer):
+
     class Meta:
         model = Player
-        fields = ('pk', 'user')
+        fields = '__all__'
 
 
-class NPCSerializer(serializers.ModelSerializer):
+class NPCSerializer(CharacterSerializer):
+
     class Meta:
         model = NPC
-        fields = ('pk', 'user')
+        fields = '__all__'
 
 
 def character_serializer(character):

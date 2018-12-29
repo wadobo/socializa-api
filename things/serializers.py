@@ -9,18 +9,18 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ('name', 'description', 'pickable', 'shareable', 'consumable')
+        fields = '__all__'
 
 
 class KnowledgeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Knowledge
-        fields = ('name', 'description', 'shareable')
+        fields = '__all__'
 
 
 class RolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rol
-        fields = ('name', 'description')
+        fields = '__all__'

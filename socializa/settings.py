@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
 
+    'django_filters',
     'django_nose',
     'rest_framework',
     'oauth2_provider',
     'social_django',
+    'rest_framework.authtoken',
     'rest_framework_social_oauth2',
 
     'base',
@@ -104,7 +106,10 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    )
 }
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
