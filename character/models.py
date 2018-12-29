@@ -9,6 +9,7 @@ User._meta.get_field('email')._unique = True
 User._meta.get_field('username')._unique = False
 
 
+
 class Character(models.Model):
     """
     This model will be used for the characters of the game, where we will
