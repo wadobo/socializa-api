@@ -13,6 +13,7 @@ from character.models import Player
 from character.factories import PlayerFactory
 from contents.models import Content
 from owner.models import Owner
+from things.factories import ItemFactory
 from things.models import Item
 
 
@@ -133,6 +134,20 @@ class GameTestCase(APITestCase):
                 field = field.isoformat()
             self.assertEqual(field, value)
 
+    def test_game_update_partial(self):
+        self.authenticate(username=self.player.user.username)
+        data = {'description': 'other', 'preferences': {'vision_distance': 80}}
+        response = self.client.patch('/game/{}/'.format(self.game.pk), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('description' in response.json().keys())
+        self.assertEqual(response.json()['description'], data['description'])
+        self.assertTrue('preferences' in response.json().keys())
+        self.assertTrue('vision_distance' in response.json()['preferences'])
+        self.assertEqual(
+            response.json()['preferences']['vision_distance'],
+            data['preferences']['vision_distance']
+        )
+
 
 class GameContentTestCase(APITestCase):
 
@@ -143,6 +158,8 @@ class GameContentTestCase(APITestCase):
         call_command('socialapps')
         self.client = BaseClient(version=settings.VERSION)
         self.player = PlayerFactory.create()
+        self.item = ItemFactory.create()
+
         self.ct_player = ContentType.objects.get(model='player').pk
         self.ct_npc = ContentType.objects.get(model='npc').pk
         self.ct_item = ContentType.objects.get(model='item').pk
@@ -161,20 +178,7 @@ class GameContentTestCase(APITestCase):
     def test_create_game_contents(self):
         self.authenticate(username=self.player.user.username)
 
-        # Create game complete: contents
-        ## Create item
-        data = {
-            'name': 'Item',
-            'description': 'Item description',
-            'shareable': True,
-            'pickable': True,
-            'consumable': True,
-        }
-        response = self.client.post('/thing/item/', data)
-        self.assertEqual(response.status_code, 201)
-        item = Item.objects.last()
-
-        ## Create game with contents
+        # Complete GAME in JSON
         data = {
             'title': 'My game',
             'description': 'Example game',
@@ -201,7 +205,7 @@ class GameContentTestCase(APITestCase):
                     },
                 },
                 {  # New, knowledge
-                    'content_type': self.ct_item,
+                    'content_type': self.ct_knowledge,
                     'content_id': 0,
                     'content': {
                         'name': 'Confidential information',
@@ -216,8 +220,8 @@ class GameContentTestCase(APITestCase):
                     },
                 },
                 {  # Exist, Item
-                    'content_type': ContentType.objects.get_for_model(item).pk,
-                    'content_id': item.pk,
+                    'content_type': self.ct_item,
+                    'content_id': self.item.pk,
                     'position': {
                         'longitude': 37.201421,
                         'latitude': -6.9447224
@@ -225,6 +229,19 @@ class GameContentTestCase(APITestCase):
                 },
             ]
         }
+
+        # Create game in parts
+
+        ## Create game
         response = self.client.post('/game/', data)
         self.assertEqual(response.status_code, 201)
+        self.assertTrue('id' in response.json().keys())
+        game_id = response.json().get('id')
+        self.assertEqual(Game.objects.count(), 1)
+
+        ## Create contents
+        for content in data.pop('contents'):
+            content.update({'game': game_id})
+            response = self.client.post('/content/', content)
+            self.assertEqual(response.status_code, 201)
         self.assertEqual(Content.objects.count(), 3)
