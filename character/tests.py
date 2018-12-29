@@ -25,10 +25,11 @@ class NPCTestCase(APITestCase):
 
     def tearDown(self):
         self.client = None
+        Player.objects.all().delete()
+        NPC.objects.all().delete()
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     # CREATE
     def character_create(self, ctype, data, st):

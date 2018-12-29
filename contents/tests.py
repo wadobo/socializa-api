@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.management import call_command
@@ -145,14 +143,14 @@ class ContentTestCase(APITestCase):
         response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
         self.assertEqual(response.status_code, 401)
 
-        self.owner.delete()
+        player = PlayerFactory.create()
+        self.client.authenticate(player.user.username, 'qweqweqwe')
         response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
-        self.authenticate()
         self.assertEqual(response.status_code, 404)
 
     def test_destroy_content(self):
-        response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
         self.authenticate()
+        response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
         self.assertEqual(response.status_code, 204)
 
     # UPDATE
