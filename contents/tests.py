@@ -27,11 +27,8 @@ from things.models import Item, Knowledge, Rol
 class ContentTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
         self.game = GameFactory.create()
         self.owner = Owner(player=self.player, game=self.game)
@@ -82,9 +79,8 @@ class ContentTestCase(APITestCase):
         Knowledge.objects.all().delete()
         Rol.objects.all().delete()
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     # LIST
     def test_list_content_unauth(self):
@@ -92,13 +88,13 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_list_content(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.get('/content/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 5)
 
     def test_list_content_filter_game(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.get('/content/?game_id={}'.format(self.game.pk))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 5)
@@ -109,7 +105,7 @@ class ContentTestCase(APITestCase):
 
     def test_list_content_filter_bad(self):
         """ If you use bad query params, return none """
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.get('/content/?game_id=str')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 0)
@@ -127,7 +123,7 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_create_content_bad_request(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         self.data_mode1['content_type'] = 'bad'
         response = self.client.post('/content/', self.data_mode1)
         self.assertEqual(response.status_code, 400)
@@ -137,7 +133,7 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_create_content(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/content/', self.data_mode1)
         self.assertEqual(response.status_code, 201)
 
@@ -150,13 +146,13 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
         self.owner.delete()
-        self.authenticate(username=self.player.user.username)
         response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
+        self.authenticate()
         self.assertEqual(response.status_code, 404)
 
     def test_destroy_content(self):
-        self.authenticate(username=self.player.user.username)
         response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
+        self.authenticate()
         self.assertEqual(response.status_code, 204)
 
     # UPDATE
@@ -172,7 +168,7 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_update_content_bad_request(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         data = {
             "portion": {
                 "longitude": 36.261421,
@@ -189,8 +185,8 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_update_content(self):
-        self.authenticate(username=self.player.user.username)
         data = ContentSerializer(self.contentNPC).data
+        self.authenticate()
         data.update({
             "position": {
                 "longitude": 36.261421,
@@ -218,7 +214,7 @@ class ContentTestCase(APITestCase):
 
     # RETRIEVE
     def test_get_content_unexist_pk(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.get('/content/{}/'.format(0))
         self.assertEqual(response.status_code, 404)
 
@@ -227,9 +223,9 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_get_content(self):
-        self.authenticate(username=self.player.user.username)
         contents = [self.contentPlayer, self.contentNPC, self.contentItem,
                 self.contentKnowledge, self.contentRol]
+        self.authenticate()
         for content in contents:
             response = self.client.get('/content/{}/'.format(content.pk))
             self.assertEqual(response.status_code, 200)
