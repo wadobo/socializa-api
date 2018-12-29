@@ -26,25 +26,11 @@ class GameListCreate(generics.ListCreateAPIView):
         return games
 
     def create(self, request, version, *args, **kwargs):
-        contents = request.data.pop('contents', [])
         response = super().create(request, version, *args, **kwargs)
         if response.status_code == 201:
             game_id = response.data.get('id')
             owner = Owner(player=request.user.character_player, game_id=game_id)
             owner.save()
-            objs = []
-            for content in contents:
-                content.update({'game': game_id})
-                ser = ContentSerializer(data=content)
-                if ser.is_valid():
-                    objs.append(ser.save())
-                else:
-                    print(ser.errors)
-                    # REMOVE bad creations
-                    delete = [obj.delete() for obj in objs]
-                    owner.game.delete()
-                    owner.delete()
-                    ser.is_valid(raise_exception=True)
         return response
 
 
