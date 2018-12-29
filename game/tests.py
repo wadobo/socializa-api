@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.utils import timezone
@@ -20,11 +18,8 @@ from things.models import Item
 class GameTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
         self.game = GameFactory.create()
         self.owner = Owner(player=self.player, game=self.game)
@@ -43,9 +38,8 @@ class GameTestCase(APITestCase):
     def tearDown(self):
         self.client = None
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     def test_game_create_unauthorized(self):
         response = self.client.post('/game/', self.data)
@@ -53,7 +47,7 @@ class GameTestCase(APITestCase):
 
     def test_game_create_bad_request_1(self):
         self.data['preferences']['vision_distance'] = 'bad'
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('preferences' in response.json())
@@ -61,7 +55,7 @@ class GameTestCase(APITestCase):
 
     def test_game_create_bad_request_2(self):
         self.data['start'] = 'bad'
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('start' in response.json())
@@ -70,7 +64,7 @@ class GameTestCase(APITestCase):
         games_amount = Game.objects.count()
         owners_amount = Owner.objects.count()
 
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/game/', self.data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Game.objects.count(), games_amount + 1)
@@ -96,7 +90,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_game_destroy(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.delete('/game/{}/'.format(self.game.pk))
         self.assertEqual(response.status_code, 204)
 
@@ -106,7 +100,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_game_update_bad_request_1(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         self.data['preferences']['vision_distance'] = True
         response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 400)
@@ -114,14 +108,14 @@ class GameTestCase(APITestCase):
         self.assertTrue('vision_distance' in response.json().get('preferences'))
 
     def test_game_update_bad_request_2(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         self.data['start'] = 'bad'
         response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 400)
         self.assertTrue('start' in response.json())
 
     def test_game_update(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         self.data['preferences']['vision_distance'] = 80
         response = self.client.put('/game/{}/'.format(self.game.pk), self.data)
         self.assertEqual(response.status_code, 200)
@@ -135,7 +129,7 @@ class GameTestCase(APITestCase):
             self.assertEqual(field, value)
 
     def test_game_update_partial(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         data = {'description': 'other', 'preferences': {'vision_distance': 80}}
         response = self.client.patch('/game/{}/'.format(self.game.pk), data)
         self.assertEqual(response.status_code, 200)
@@ -152,11 +146,8 @@ class GameTestCase(APITestCase):
 class GameContentTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
         self.item = ItemFactory.create()
 
@@ -168,15 +159,13 @@ class GameContentTestCase(APITestCase):
 
     def tearDown(self):
         self.client = None
-        User.objects.all().delete()
         Player.objects.all().delete()
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     def test_create_game_contents(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
 
         # Complete GAME in JSON
         data = {

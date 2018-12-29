@@ -12,8 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email')
 
 
-class NPCSerializer(CharacterSerializer):
-
 class CharacterSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 

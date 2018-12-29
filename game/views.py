@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.exceptions import FieldError
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
 

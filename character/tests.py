@@ -1,22 +1,20 @@
-from django.conf import settings
+from urllib.parse import urlencode
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from rest_framework.test import APITestCase
-from urllib.parse import urlencode
 
 from base.client import BaseClient
-from .factories import NPCFactory
-from .models import NPC
+from .factories import NPCFactory, PlayerFactory
+from .models import NPC, Player
 from .serializers import NPCSerializer
 
 
 class NPCTestCase(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_superuser(username='me@socializa.com',
-              password='qweqweqwe', email='me@socializa.com')
+        self.player = PlayerFactory.create()
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.npc = NPCFactory.create()
         self.data = {
             'user': {
@@ -27,10 +25,11 @@ class NPCTestCase(APITestCase):
 
     def tearDown(self):
         self.client = None
+        Player.objects.all().delete()
+        NPC.objects.all().delete()
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     # CREATE
     def character_create(self, ctype, data, st):
@@ -54,7 +53,7 @@ class NPCTestCase(APITestCase):
     def test_npc_create_exist(self):
         self.authenticate()
         data = {'user': {
-            'email': self.user.email,
+            'email': self.player.user.email,
             'password': 'qweqweqwe'
         }}
         self.character_create('npc', data, 400)

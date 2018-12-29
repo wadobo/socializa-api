@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.management import call_command
 from rest_framework.test import APITestCase
 
@@ -19,20 +17,16 @@ from .serializers import RolSerializer
 class ItemTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
         self.item = ItemFactory.create()
 
     def tearDown(self):
         self.client = None
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     def test_item_create(self):
         items_quantity = Item.objects.count()
@@ -46,7 +40,7 @@ class ItemTestCase(APITestCase):
 
         response = self.client.post('/thing/item/', data)
         self.assertEqual(response.status_code, 401)
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/thing/item/', data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Item.objects.count(), items_quantity + 1)
@@ -71,7 +65,7 @@ class ItemTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_item_destroy(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.delete('/thing/item/{}/'.format(self.item.pk))
         self.assertEqual(response.status_code, 204)
 
@@ -87,7 +81,7 @@ class ItemTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_item_update(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         data = {
             'name': 'Item',
             'description': 'Item description',
@@ -106,20 +100,16 @@ class ItemTestCase(APITestCase):
 class KnowledgeTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
-        self.knowledge = KnowledgeFactory.create()
+        self.kn = KnowledgeFactory.create()
 
     def tearDown(self):
         self.client = None
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     def test_knowledge_create(self):
         knowledges_quantity = Knowledge.objects.count()
@@ -131,7 +121,7 @@ class KnowledgeTestCase(APITestCase):
 
         response = self.client.post('/thing/knowledge/', data)
         self.assertEqual(response.status_code, 401)
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/thing/knowledge/', data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Knowledge.objects.count(), knowledges_quantity + 1)
@@ -140,24 +130,24 @@ class KnowledgeTestCase(APITestCase):
         response = self.client.get('/thing/knowledge/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 1)
-        self.assertEqual(response.json(), [KnowledgeSerializer(self.knowledge).data])
+        self.assertEqual(response.json(), [KnowledgeSerializer(self.kn).data])
 
     def test_knowledge_retrieve(self):
-        response = self.client.get('/thing/knowledge/{}/'.format(self.knowledge.pk))
+        response = self.client.get('/thing/knowledge/{}/'.format(self.kn.pk))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), KnowledgeSerializer(self.knowledge).data)
+        self.assertEqual(response.json(), KnowledgeSerializer(self.kn).data)
 
     def test_knowledge_retrieve_unknow(self):
         response = self.client.get('/thing/knowledge/-1/')
         self.assertEqual(response.status_code, 404)
 
     def test_knowledge_destroy_unauthorized(self):
-        response = self.client.delete('/thing/knowledge/{}/'.format(self.knowledge.pk))
+        response = self.client.delete('/thing/knowledge/{}/'.format(self.kn.pk))
         self.assertEqual(response.status_code, 401)
 
     def test_knowledge_destroy(self):
-        self.authenticate(username=self.player.user.username)
-        response = self.client.delete('/thing/knowledge/{}/'.format(self.knowledge.pk))
+        self.authenticate()
+        response = self.client.delete('/thing/knowledge/{}/'.format(self.kn.pk))
         self.assertEqual(response.status_code, 204)
 
     def test_knowledge_update_unauthorized(self):
@@ -166,19 +156,19 @@ class KnowledgeTestCase(APITestCase):
             'description': 'Knowledge description',
             'shareable': True,
         }
-        response = self.client.put('/thing/knowledge/{}/'.format(self.knowledge.pk), data)
+        response = self.client.put('/thing/knowledge/{}/'.format(self.kn.pk), data)
         self.assertEqual(response.status_code, 401)
 
     def test_knowledge_update(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         data = {
             'name': 'Knowledge',
             'description': 'Knowledge description',
             'shareable': True,
         }
-        response = self.client.put('/thing/knowledge/{}/'.format(self.knowledge.pk), data)
+        response = self.client.put('/thing/knowledge/{}/'.format(self.kn.pk), data)
         self.assertEqual(response.status_code, 200)
-        knowledge_changed = Knowledge.objects.get(pk=self.knowledge.pk)
+        knowledge_changed = Knowledge.objects.get(pk=self.kn.pk)
         for key, value in data.items():
             field = getattr(knowledge_changed, key)
             self.assertEqual(field, value)
@@ -187,20 +177,16 @@ class KnowledgeTestCase(APITestCase):
 class RolTestCase(APITestCase):
 
     def setUp(self):
-        User.objects.create_superuser(username='me@socializa.com',
-                                      password='qweqweqwe',
-                                      email='me@socializa.com')
         call_command('socialapps')
-        self.client = BaseClient(version=settings.VERSION)
+        self.client = BaseClient()
         self.player = PlayerFactory.create()
         self.rol = RolFactory.create()
 
     def tearDown(self):
         self.client = None
 
-    def authenticate(self, username='me@socializa.com', pwd='qweqweqwe'):
-        response = self.client.authenticate(username, pwd)
-        self.assertEqual(response.status_code, 200)
+    def authenticate(self, pwd='qweqweqwe'):
+        self.client.authenticate(self.player.user.username, pwd)
 
     def test_rol_create(self):
         rols_quantity = Rol.objects.count()
@@ -211,7 +197,7 @@ class RolTestCase(APITestCase):
 
         response = self.client.post('/thing/rol/', data)
         self.assertEqual(response.status_code, 401)
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.post('/thing/rol/', data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Rol.objects.count(), rols_quantity + 1)
@@ -236,7 +222,7 @@ class RolTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_rol_destroy(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         response = self.client.delete('/thing/rol/{}/'.format(self.rol.pk))
         self.assertEqual(response.status_code, 204)
 
@@ -249,7 +235,7 @@ class RolTestCase(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_rol_update(self):
-        self.authenticate(username=self.player.user.username)
+        self.authenticate()
         data = {
             'name': 'Rol',
             'description': 'Rol description',

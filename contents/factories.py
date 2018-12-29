@@ -9,7 +9,6 @@ from factory import (
         SubFactory
 )
 
-
 from .models import Content
 from character.factories import NPCFactory, PlayerFactory
 from things.factories import ItemFactory, KnowledgeFactory, RolFactory
