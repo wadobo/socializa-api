@@ -4,6 +4,6 @@ from . import views
 
 
 urlpatterns = [
-    path('', views.CharacterListCreate.as_view(), name="character_list"),
-    path('<int:pk>/', views.CharacterDetail.as_view(), name="character_detail"),
+    path('npc/', views.NPCListCreate.as_view(), name="npc_list"),
+    path('npc/<int:pk>/', views.NPCDetail.as_view(), name="npc_detail"),
 ]
