@@ -43,7 +43,6 @@ class Rol(Thing):
     impossible. For example: someone with the Role of Thief can steal or open
     doors and someone with the Role of Doctor can heal.
     """
-    pass
 
 
 THING_TYPES = models.Q(app_label='thing', model='Item')

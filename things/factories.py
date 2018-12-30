@@ -1,8 +1,10 @@
 from factory.django import DjangoModelFactory
 
-from .models import Item
-from .models import Knowledge
-from .models import Rol
+from .models import (
+    Item,
+    Knowledge,
+    Rol,
+)
 
 
 class ThingFactory(DjangoModelFactory):

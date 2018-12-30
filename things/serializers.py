@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
-from .models import Item
-from .models import Knowledge
-from .models import Rol
+from .models import Item, Knowledge, Rol
 
 
 class ItemSerializer(serializers.ModelSerializer):

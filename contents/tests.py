@@ -1,8 +1,15 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.management import call_command
-from rest_framework.test import APITestCase
 
+from base.tests import BaseTestCase
+from character.factories import PlayerFactory
+from character.models import NPC
+from game.factories import GameFactory
+from game.models import Game
+from owner.models import Owner
+from things.factories import ItemFactory
+from things.models import Item, Knowledge, Rol
 from .models import Content
 from .factories import (
     ContentPlayerFactory,
@@ -12,40 +19,32 @@ from .factories import (
     ContentRolFactory,
 )
 from .serializers import ContentSerializer
-from base.client import BaseClient
-from character.factories import PlayerFactory
-from character.models import Player, NPC
-from game.factories import GameFactory
-from game.models import Game
-from owner.models import Owner
-from things.factories import ItemFactory
-from things.models import Item, Knowledge, Rol
 
 
-class ContentTestCase(APITestCase):
+class ContentTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.game = GameFactory.create()
-        self.owner = Owner(player=self.player, game=self.game)
-        self.owner.save()
-        self.contentPlayer = ContentPlayerFactory.create(game_id=self.game.pk)
-        self.contentNPC = ContentNPCFactory.create(game_id=self.game.pk)
-        self.contentItem = ContentItemFactory.create(game_id=self.game.pk,
-                position=Point(37.261421, -6.9447224))
-        self.contentKnowledge = ContentKnowledgeFactory.create(game_id=self.game.pk)
-        self.contentRol = ContentRolFactory.create(game_id=self.game.pk)
+        owner = Owner(player=self.player, game=self.game)
+        owner.save()
+        self.content_player = ContentPlayerFactory.create(game_id=self.game.pk)
+        self.content_npc = ContentNPCFactory.create(game_id=self.game.pk)
+        self.content_item = ContentItemFactory.create(
+            game_id=self.game.pk,
+            position=Point(37.261421, -6.9447224)
+        )
+        self.content_knowledge = ContentKnowledgeFactory.create(game_id=self.game.pk)
+        self.content_rol = ContentRolFactory.create(game_id=self.game.pk)
         self.item = ItemFactory.create()
-        self.content_type_item = ContentType.objects.get(model="item").pk
+
         self.data_mode1 = {
             "game": self.game.pk,
             "position": {
                 "longitude": 37.261421,
                 "latitude": -6.9447224
             },
-            "content_type": self.content_type_item,
+            "content_type": self.content_item.content_type.pk,
             "content_id": self.item.pk,
         }
 
@@ -55,7 +54,7 @@ class ContentTestCase(APITestCase):
                 "longitude": 37.261421,
                 "latitude": -6.9447224
             },
-            "content_type": self.content_type_item,
+            "content_type": self.content_item.content_type.pk,
             "content_id": 0,
             "content": {
                 "name": "key",
@@ -67,8 +66,7 @@ class ContentTestCase(APITestCase):
         }
 
     def tearDown(self):
-        self.client = None
-        Player.objects.all().delete()
+        super().tearDown()
         NPC.objects.all().delete()
         Game.objects.all().delete()
         Owner.objects.all().delete()
@@ -76,9 +74,6 @@ class ContentTestCase(APITestCase):
         Item.objects.all().delete()
         Knowledge.objects.all().delete()
         Rol.objects.all().delete()
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     # LIST
     def test_list_content_unauth(self):
@@ -140,17 +135,17 @@ class ContentTestCase(APITestCase):
 
     # DESTROY
     def test_destroy_content_unauth(self):
-        response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
+        response = self.client.delete('/content/{}/'.format(self.content_item.pk))
         self.assertEqual(response.status_code, 401)
 
         player = PlayerFactory.create()
         self.client.authenticate(player.user.username, 'qweqweqwe')
-        response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
+        response = self.client.delete('/content/{}/'.format(self.content_item.pk))
         self.assertEqual(response.status_code, 404)
 
     def test_destroy_content(self):
         self.authenticate()
-        response = self.client.delete('/content/{}/'.format(self.contentItem.pk))
+        response = self.client.delete('/content/{}/'.format(self.content_item.pk))
         self.assertEqual(response.status_code, 204)
 
     # UPDATE
@@ -161,8 +156,8 @@ class ContentTestCase(APITestCase):
                 "latitude": -7.9447224
             }
         }
-        response = self.client.put('/content/{}/'.format(self.contentNPC.pk),
-                data)
+        _url = '/content/{}/'.format(self.content_npc.pk)
+        response = self.client.put(_url, data)
         self.assertEqual(response.status_code, 401)
 
     def test_update_content_bad_request(self):
@@ -173,42 +168,42 @@ class ContentTestCase(APITestCase):
                 "latitude": -7.9447224
             }
         }
-        response = self.client.put('/content/{}/'.format(self.contentNPC.pk),
-                data)
+        _url = '/content/{}/'.format(self.content_npc.pk)
+        response = self.client.put(_url, data)
         self.assertEqual(response.status_code, 400)
 
         data = {"position": 'bad'}
-        response = self.client.put('/content/{}/'.format(self.contentNPC.pk),
-                data)
+        _url = '/content/{}/'.format(self.content_npc.pk)
+        response = self.client.put(_url, data)
         self.assertEqual(response.status_code, 400)
 
     def test_update_content(self):
-        data = ContentSerializer(self.contentNPC).data
         self.authenticate()
+        data = ContentSerializer(self.content_npc).data
         data.update({
             "position": {
                 "longitude": 36.261421,
                 "latitude": -7.9447224
             }
         })
-        response = self.client.put('/content/{}/'.format(self.contentNPC.pk),
-                data)
+        _url = '/content/{}/'.format(self.content_npc.pk)
+        response = self.client.put(_url, data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('position'), data.get('position'))
 
-        data = ContentSerializer(self.contentNPC).data
+        data = ContentSerializer(self.content_npc).data
         data.pop('position')
         data.update({
-            "content_type": self.content_type_item,
+            "content_type": self.content_item.content_type.pk,
             "content_id": self.item.pk,
         })
-        response = self.client.put('/content/{}/'.format(self.contentNPC.pk),
-                data)
+        _url = '/content/{}/'.format(self.content_npc.pk)
+        response = self.client.put(_url, data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('content_type'),
-                data.get('content_type'))
+                         data.get('content_type'))
         self.assertEqual(response.json().get('content_id'),
-                data.get('content_id'))
+                         data.get('content_id'))
 
     # RETRIEVE
     def test_get_content_unexist_pk(self):
@@ -217,17 +212,19 @@ class ContentTestCase(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_content_unauth(self):
-        response = self.client.get('/content/{}/'.format(self.contentNPC.pk))
+        response = self.client.get('/content/{}/'.format(self.content_npc.pk))
         self.assertEqual(response.status_code, 401)
 
     def test_get_content(self):
-        contents = [self.contentPlayer, self.contentNPC, self.contentItem,
-                self.contentKnowledge, self.contentRol]
         self.authenticate()
+        contents = [
+            self.content_player, self.content_npc, self.content_item,
+            self.content_knowledge, self.content_rol
+        ]
         for content in contents:
             response = self.client.get('/content/{}/'.format(content.pk))
             self.assertEqual(response.status_code, 200)
             self.assertTrue('position' in response.json().keys())
             self.assertTrue('content' in response.json().keys())
             self.assertEqual(response.json().get('content_type'),
-                    content.content_type.pk)
+                             content.content_type.pk)

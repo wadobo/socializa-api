@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from .models import Game, Preference
 from contents.serializers import ContentSerializer
+from .models import Game, Preference
 
 
 class PreferenceSerializer(serializers.ModelSerializer):
@@ -28,7 +28,8 @@ class GameSerializer(serializers.ModelSerializer):
 
     def update(self, instance, data):
         p_serializer = PreferenceSerializer(instance.preferences,
-                data=data.pop('preferences', {}), partial=True)
+                                            data=data.pop('preferences', {}),
+                                            partial=True)
         p_serializer.is_valid(raise_exception=True)
         preferences = p_serializer.save()
         data['preferences'] = preferences

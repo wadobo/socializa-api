@@ -1,8 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import NPC
-from .models import Player
+from .models import NPC, Player
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,17 +34,17 @@ class NPCSerializer(CharacterSerializer):
             self.initial_data['user']['username'] = email.split('@')[0]
         return super().is_valid(raise_exception=raise_exception)
 
-    def create(self, data, *args, **kwargs):
+    def create(self, data):
         user_ser = UserSerializer(data=data.pop('user'))
         user_ser.is_valid(raise_exception=True)
         data['user'] = user_ser.save()
-        return super().create(data, *args, **kwargs)
+        return super().create(data)
 
-    def update(self, instance, data, *args, **kwargs):
+    def update(self, instance, data):
         user_ser = UserSerializer(instance.user, data=data.pop('user'))
         user_ser.is_valid(raise_exception=True)
         data['user'] = user_ser.save()
-        return super().update(instance, data, *args, **kwargs)
+        return super().update(instance, data)
 
     class Meta:
         model = NPC

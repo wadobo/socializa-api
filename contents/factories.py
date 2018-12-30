@@ -9,9 +9,9 @@ from factory import (
         SubFactory
 )
 
-from .models import Content
 from character.factories import NPCFactory, PlayerFactory
 from things.factories import ItemFactory, KnowledgeFactory, RolFactory
+from .models import Content
 
 
 def gen_latlng():
@@ -19,10 +19,13 @@ def gen_latlng():
     return GEOSGeometry('POINT({0} {1})'.format(lat, lng))
 
 
+def get_content_type(data):
+    return ContentType.objects.get_for_model(data.content)
+
+
 class ContentFactory(DjangoModelFactory):
     content_id = SelfAttribute('content.pk')
-    content_type = LazyAttribute(
-            lambda o: ContentType.objects.get_for_model(o.content))
+    content_type = LazyAttribute(get_content_type)
     position = LazyFunction(gen_latlng)
 
     class Meta:

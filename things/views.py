@@ -1,12 +1,8 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from .models import Item
-from .models import Knowledge
-from .models import Rol
-from .serializers import ItemSerializer
-from .serializers import KnowledgeSerializer
-from .serializers import RolSerializer
+from .models import Item, Knowledge, Rol
+from .serializers import ItemSerializer, KnowledgeSerializer, RolSerializer
 
 
 class ItemListCreate(generics.ListCreateAPIView):

@@ -1,32 +1,16 @@
 from django.core.management import call_command
-from rest_framework.test import APITestCase
 
-from base.client import BaseClient
-from character.factories import PlayerFactory
-from .factories import ItemFactory
-from .factories import KnowledgeFactory
-from .factories import RolFactory
-from .models import Item
-from .models import Knowledge
-from .models import Rol
-from .serializers import ItemSerializer
-from .serializers import KnowledgeSerializer
-from .serializers import RolSerializer
+from base.tests import BaseTestCase
+from .factories import ItemFactory, KnowledgeFactory, RolFactory
+from .models import Item, Knowledge, Rol
+from .serializers import ItemSerializer, KnowledgeSerializer, RolSerializer
 
 
-class ItemTestCase(APITestCase):
+class ItemTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.item = ItemFactory.create()
-
-    def tearDown(self):
-        self.client = None
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     def test_item_create(self):
         items_quantity = Item.objects.count()
@@ -37,7 +21,6 @@ class ItemTestCase(APITestCase):
             'pickable': True,
             'consumable': True,
         }
-
         response = self.client.post('/thing/item/', data)
         self.assertEqual(response.status_code, 401)
         self.authenticate()
@@ -97,19 +80,11 @@ class ItemTestCase(APITestCase):
             self.assertEqual(field, value)
 
 
-class KnowledgeTestCase(APITestCase):
+class KnowledgeTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.kn = KnowledgeFactory.create()
-
-    def tearDown(self):
-        self.client = None
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     def test_knowledge_create(self):
         knowledges_quantity = Knowledge.objects.count()
@@ -118,7 +93,6 @@ class KnowledgeTestCase(APITestCase):
             'description': 'Knowledge description',
             'shareable': True,
         }
-
         response = self.client.post('/thing/knowledge/', data)
         self.assertEqual(response.status_code, 401)
         self.authenticate()
@@ -174,19 +148,11 @@ class KnowledgeTestCase(APITestCase):
             self.assertEqual(field, value)
 
 
-class RolTestCase(APITestCase):
+class RolTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.rol = RolFactory.create()
-
-    def tearDown(self):
-        self.client = None
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     def test_rol_create(self):
         rols_quantity = Rol.objects.count()
@@ -194,7 +160,6 @@ class RolTestCase(APITestCase):
             'name': 'Rol',
             'description': 'Rol description',
         }
-
         response = self.client.post('/thing/rol/', data)
         self.assertEqual(response.status_code, 401)
         self.authenticate()

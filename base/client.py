@@ -1,5 +1,3 @@
-import json
-
 from django.conf import settings
 from django.test import Client
 from oauth2_provider.models import Application
@@ -44,27 +42,24 @@ class BaseClient(Client):
             self.auth_token = ''
         return response
 
-    def extra(self):
-        return {
-            'content_type': 'application/json',
-            'HTTP_AUTHORIZATION': self.auth_token
-        }
+    def get(self, url, data='', **extra):
+        return super().get(url, data, **extra)
 
-    def get(self, url):
-        return super().get(self.base_url + url, **self.extra())
+    def post(self, url, data='', content_type='application/json', **extra):
+        return super().post(url, data, content_type=content_type, **extra)
 
-    def post(self, url, data=None):
-        data = {} if data is None else json.dumps(data)
-        return super().post(self.base_url + url, data, **self.extra())
+    def put(self, url, data='', content_type='application/json', **extra):
+        return super().put(url, data, content_type=content_type, **extra)
 
-    def put(self, url, data=None):
-        data = {} if data is None else json.dumps(data)
-        return super().put(self.base_url + url, data, **self.extra())
+    def patch(self, url, data='', content_type='application/json', **extra):
+        return super().patch(url, data, content_type=content_type, **extra)
 
-    def patch(self, url, data=None):
-        data = {} if data is None else json.dumps(data)
-        return super().patch(self.base_url + url, data, **self.extra())
+    def delete(self, url, data='', content_type='application/json', **extra):
+        return super().delete(url, data, content_type=content_type, **extra)
 
-    def delete(self, url, data=None):
-        data = {} if data is None else json.dumps(data)
-        return super().delete(self.base_url + url, data, **self.extra())
+    def generic(self, method, path, data='', content_type='application/json',
+                **extra):
+        path = self.base_url + path
+        extra.update({'HTTP_AUTHORIZATION': self.auth_token})
+        return super().generic(method, path, data, content_type=content_type,
+                               **extra)
