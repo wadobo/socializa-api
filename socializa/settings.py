@@ -220,9 +220,7 @@ GOOGLE_APIKEY = 'update me'
 SOCIAL_AUTH_FACEBOOK_KEY = 'update me'
 SOCIAL_AUTH_FACEBOOK_SECRET = 'update me'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
-SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-  'fields': 'id,name,email',
-}
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {'fields': 'id,name,email'}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/

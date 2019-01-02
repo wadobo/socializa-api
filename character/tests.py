@@ -1,20 +1,17 @@
 from urllib.parse import urlencode
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from rest_framework.test import APITestCase
 
-from base.client import BaseClient
-from .factories import NPCFactory, PlayerFactory
-from .models import NPC, Player
+from base.tests import BaseTestCase
+from .factories import NPCFactory
+from .models import NPC
 from .serializers import NPCSerializer
 
 
-class NPCTestCase(APITestCase):
+class NPCTestCase(BaseTestCase):
 
     def setUp(self):
-        self.player = PlayerFactory.create()
-        call_command('socialapps')
-        self.client = BaseClient()
+        super().setUp()
         self.npc = NPCFactory.create()
         self.data = {
             'user': {
@@ -24,18 +21,14 @@ class NPCTestCase(APITestCase):
         }
 
     def tearDown(self):
-        self.client = None
-        Player.objects.all().delete()
+        super().tearDown()
         NPC.objects.all().delete()
 
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
-
     # CREATE
-    def character_create(self, ctype, data, st):
+    def character_create(self, ctype, data, status):
         self.data.update(data)
         response = self.client.post('/character/{}/'.format(ctype), self.data)
-        self.assertEqual(response.status_code, st)
+        self.assertEqual(response.status_code, status)
         return response
 
     def test_npc_create_unauth(self):
@@ -68,10 +61,10 @@ class NPCTestCase(APITestCase):
         self.assertFalse('password' in response.json().get('user'))
 
     # LIST
-    def character_list(self, ctype, st, params):
+    def character_list(self, ctype, status, params):
         filters = '?{}'.format(urlencode(params)) if params else ''
         response = self.client.get('/character/{0}/{1}'.format(ctype, filters))
-        self.assertEqual(response.status_code, st)
+        self.assertEqual(response.status_code, status)
         return response
 
     def test_npc_list_filter(self):
@@ -80,16 +73,16 @@ class NPCTestCase(APITestCase):
         response = self.character_list('npc', 200, params)
         query = {'user__username__icontains': params.get('search')}
         self.assertEqual(len(response.json()),
-                NPC.objects.filter(**query).count())
+                         NPC.objects.filter(**query).count())
 
     def test_npc_list(self):
         response = self.character_list('npc', 200, None)
         self.assertEqual(len(response.json()), 1)
 
     # DESTROY
-    def character_destroy(self, ctype, st, pk):
+    def character_destroy(self, ctype, status, pk):
         response = self.client.delete('/character/{0}/{1}/'.format(ctype, pk))
-        self.assertEqual(response.status_code, st)
+        self.assertEqual(response.status_code, status)
         return response
 
     def test_npc_destroy_unauth(self):
@@ -108,9 +101,9 @@ class NPCTestCase(APITestCase):
         self.assertEqual(initial_user - 1, User.objects.count())
 
     # RETRIEVE
-    def character_retrieve(self, ctype, st, pk):
+    def character_retrieve(self, ctype, status, pk):
         response = self.client.get('/character/{0}/{1}/'.format(ctype, pk))
-        self.assertEqual(response.status_code, st)
+        self.assertEqual(response.status_code, status)
         return response
 
     def test_npc_retrieve_bad_request(self):
@@ -122,11 +115,11 @@ class NPCTestCase(APITestCase):
         self.assertEqual(response.json(), NPCSerializer(self.npc).data)
 
     # UPDATE
-    def character_update(self, ctype, data, st, pk):
+    def character_update(self, ctype, data, status, pk):
         self.data.update(data)
         response = self.client.put('/character/{0}/{1}/'.format(ctype, pk),
-                self.data)
-        self.assertEqual(response.status_code, st)
+                                   self.data)
+        self.assertEqual(response.status_code, status)
         return response
 
     def test_npc_update_unauth(self):
@@ -151,4 +144,4 @@ class NPCTestCase(APITestCase):
         }
         response = self.character_update('npc', data, 200, self.npc.pk)
         self.assertEqual(response.json()['user']['username'],
-                data['user']['username'])
+                         data['user']['username'])

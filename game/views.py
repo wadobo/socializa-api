@@ -3,10 +3,9 @@ from django.core.exceptions import FieldError
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
 
+from owner.models import Owner
 from .models import Game
 from .serializers import GameSerializer
-from contents.serializers import ContentSerializer
-from owner.models import Owner
 
 
 class GameListCreate(generics.ListCreateAPIView):

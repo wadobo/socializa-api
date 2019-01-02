@@ -3,9 +3,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
+from game.models import Game
 from .models import Content
 from .serializers import ContentSerializer
-from game.models import Game
 
 
 class ContentListCreate(generics.ListCreateAPIView):

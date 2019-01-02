@@ -15,7 +15,7 @@ class Character(models.Model):
     """
 
     user = models.OneToOneField(User, on_delete=models.CASCADE,
-            related_name='%(app_label)s_%(class)s')
+                                related_name='%(app_label)s_%(class)s')
 
     class Meta:
         abstract = True
@@ -38,8 +38,6 @@ class Player(Character):
     related user to play with.
     """
 
-    pass
-
 
 class NPC(Character):
     """
@@ -47,11 +45,9 @@ class NPC(Character):
     actor.
     """
 
-    pass
-
 
 @receiver(post_delete, sender=NPC)
 @receiver(post_delete, sender=Player)
-def post_delete_user(sender, instance, *args, **kwargs):
+def post_delete_user(sender, instance, **kwargs):
     if instance.user:
         instance.user.delete()

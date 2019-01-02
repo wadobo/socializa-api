@@ -1,5 +1,5 @@
 class VersionConverter:
-    regex = '([0-9]+\.[0-9]+)?'  # X.Y
+    regex = r'([0-9]+\.[0-9]+)?'  # X.Y
 
     def to_python(self, value):
         version = float(value)

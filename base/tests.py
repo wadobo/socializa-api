@@ -1,9 +1,9 @@
 from django.core.management import call_command
 from rest_framework.test import APITestCase
 
-from .client import BaseClient
 from character.factories import PlayerFactory
 from character.models import Player
+from .client import BaseClient
 
 
 class BaseTestCase(APITestCase):
@@ -17,9 +17,14 @@ class BaseTestCase(APITestCase):
         self.client = None
         Player.objects.all().delete()
 
+    def authenticate(self, pwd='qweqweqwe'):
+        return self.client.authenticate(self.player.user.username, pwd)
+
+
+class AuthTestCase(BaseTestCase):
+
     def test_authenticate(self):
-        pwd = 'qweqweqwe'
-        response = self.client.authenticate(self.player.user.username, pwd)
+        response = self.authenticate()
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(self.client.auth_token, '')
         self.assertEqual(
@@ -40,8 +45,7 @@ class BaseTestCase(APITestCase):
         )
 
     def test_logout(self):
-        pwd = 'qweqweqwe'
-        self.client.authenticate(self.player.user.username, pwd)
+        self.authenticate()
         response = self.client.logout()
         self.assertEqual(response.status_code, 204)
         self.assertEqual(self.client.auth_token, '')

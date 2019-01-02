@@ -1,52 +1,51 @@
 from drf_extra_fields.geo_fields import PointField
 from rest_framework import serializers
 
-from .models import Content
 from character.models import NPC, Player
 from character.serializers import NPCSerializer, PlayerSerializer
 from things.models import Item, Knowledge, Rol
 from things.serializers import ItemSerializer, KnowledgeSerializer, RolSerializer
+from .models import Content
 
 
 SERIALIZERS = [NPCSerializer, PlayerSerializer, ItemSerializer,
-        KnowledgeSerializer, RolSerializer]
+               KnowledgeSerializer, RolSerializer]
 
 def get_serializer(model):
+    res = None
     for ser in SERIALIZERS:
         if ser.Meta.model == model:
-            return ser
-    return None
+            res = ser
+            break
+    return res
 
 
 class ContentRelatedField(serializers.RelatedField):
     queryset = Content.objects.all()
 
     def to_representation(self, value):
+        res = None
         if isinstance(value, Player):
-            return PlayerSerializer(value).data
+            res = PlayerSerializer(value).data
         elif isinstance(value, NPC):
-            return NPCSerializer(value).data
+            res = NPCSerializer(value).data
         elif isinstance(value, Item):
-            return ItemSerializer(value).data
+            res = ItemSerializer(value).data
         elif isinstance(value, Knowledge):
-            return KnowledgeSerializer(value).data
+            res = KnowledgeSerializer(value).data
         elif isinstance(value, Rol):
-            return RolSerializer(value).data
-        else:
-            return None
+            res = RolSerializer(value).data
+        return res
 
     def to_internal_value(self, value):
-        if isinstance(value, dict):
-            return value
-        else:
-            return None
+        return value if isinstance(value, dict) else None
 
 
 class ContentSerializer(serializers.ModelSerializer):
     content = ContentRelatedField(required=False)
     position = PointField(required=False)
 
-    def create(self, data, *args, **kwargs):
+    def create(self, data):
         content_type = data.get('content_type')
         model = content_type.model_class()
         content = data.get('content')
@@ -60,9 +59,9 @@ class ContentSerializer(serializers.ModelSerializer):
             content_id = data.get('content_id')
             content_obj = model.objects.get(pk=content_id)
             data['content'] = content_obj
-        return super().create(data, *args, **kwargs)
+        return super().create(data)
 
-    def update(self, instance, data, *args, **kwargs):
+    def update(self, instance, data):
         content_type = data.get('content_type')
         model = content_type.model_class()
         content = data.get('content')
@@ -76,7 +75,7 @@ class ContentSerializer(serializers.ModelSerializer):
             content_id = data.get('content_id')
             content_obj = model.objects.get(pk=content_id)
             data['content'] = content_obj
-        return super().create(data, *args, **kwargs)
+        return super().update(instance, data)
 
     class Meta:
         model = Content

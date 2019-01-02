@@ -13,13 +13,16 @@ class Notification(models.Model):
     will be when: they interact with the player, receive objects or knowledge.
     """
 
-    character_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,
-            limit_choices_to=models.Q(app_label='character'))
+    character_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        limit_choices_to=models.Q(app_label='character')
+    )
     character_id = models.PositiveIntegerField()
     character = GenericForeignKey('character_type', 'character_id')
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="notifications")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE,
+                             related_name="notifications")
     created = models.DateTimeField(default=timezone.now)
     read = models.BooleanField(default=True)
     msg = models.CharField(max_length=200)
     data = JSONField(default=list)
-

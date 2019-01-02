@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
-
-from oauth2_provider.models import Application
 from django.contrib.auth.models import User
+from oauth2_provider.models import Application
 
 
 class Command(BaseCommand):
@@ -9,11 +8,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         apps = ['local', 'facebook', 'google']
-
-        u = User.objects.filter(is_superuser=True).order_by('pk').first()
-
+        user = User.objects.filter(is_superuser=True).order_by('pk').first()
         for app in apps:
-            a, created = Application.objects.get_or_create(name=app, user=u)
+            a, created = Application.objects.get_or_create(name=app, user=user)
             if created:
                 a.redirect_uris = 'http://wadobo.com'
                 a.client_type = 'public'

@@ -1,29 +1,23 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.utils import timezone
-from rest_framework.test import APITestCase
 
-from .factories import GameFactory
-from .models import Game
-from .serializers import GameSerializer
-from base.client import BaseClient
-from character.models import Player
-from character.factories import PlayerFactory
+from base.tests import BaseTestCase
 from contents.models import Content
 from owner.models import Owner
 from things.factories import ItemFactory
-from things.models import Item
+from .factories import GameFactory
+from .models import Game
+from .serializers import GameSerializer
 
 
-class GameTestCase(APITestCase):
+class GameTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.game = GameFactory.create()
-        self.owner = Owner(player=self.player, game=self.game)
-        self.owner.save()
+        owner = Owner(player=self.player, game=self.game)
+        owner.save()
 
         self.data = {
             'title': 'Example',
@@ -37,9 +31,6 @@ class GameTestCase(APITestCase):
 
     def tearDown(self):
         self.client = None
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     def test_game_create_unauthorized(self):
         response = self.client.post('/game/', self.data)
@@ -143,12 +134,10 @@ class GameTestCase(APITestCase):
         )
 
 
-class GameContentTestCase(APITestCase):
+class GameContentTestCase(BaseTestCase):
 
     def setUp(self):
-        call_command('socialapps')
-        self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        super().setUp()
         self.item = ItemFactory.create()
 
         self.ct_player = ContentType.objects.get(model='player').pk
@@ -156,13 +145,6 @@ class GameContentTestCase(APITestCase):
         self.ct_item = ContentType.objects.get(model='item').pk
         self.ct_knowledge = ContentType.objects.get(model='knowledge').pk
         self.ct_rol = ContentType.objects.get(model='rol').pk
-
-    def tearDown(self):
-        self.client = None
-        Player.objects.all().delete()
-
-    def authenticate(self, pwd='qweqweqwe'):
-        self.client.authenticate(self.player.user.username, pwd)
 
     def test_create_game_contents(self):
         self.authenticate()

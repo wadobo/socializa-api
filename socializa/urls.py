@@ -37,4 +37,4 @@ urlpatterns = [
 ]
 for version in settings.VERSIONS:
     urlpatterns.append(path('api/v{}/auth/'.format(version),
-            include('rest_framework_social_oauth2.urls')))
+                            include('rest_framework_social_oauth2.urls')))
