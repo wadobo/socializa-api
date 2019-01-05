@@ -21,14 +21,6 @@ class Character(models.Model):
     class Meta:
         abstract = True
 
-    @classmethod
-    def create(cls, email, password):
-        user = User.objects.create_user(email, email, password)
-        user.save()
-        player = cls(user=user)
-        player.save()
-        return player
-
     def __str__(self):
         return self.user.username
 

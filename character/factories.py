@@ -14,6 +14,9 @@ from .models import Player
 
 
 class UserFactory(DjangoModelFactory):
+    """ This factory create a Player, because there is a post_create signal for
+    User that create a Player. """
+
     class Meta:
         model = User
 
@@ -33,8 +36,3 @@ class CharacterFactory(DjangoModelFactory):
 class NPCFactory(CharacterFactory):
     class Meta:
         model = NPC
-
-
-class PlayerFactory(CharacterFactory):
-    class Meta:
-        model = Player
