@@ -69,14 +69,14 @@ class GameStatusForPlayer(views.APIView):
 
         result = {
                     'npcs': [ContentSerializer(x).data
-                             for x in contents.filter(content_type=ContentType.objects.get(pk=16))
+                             for x in contents.filter(content_type=ContentType.objects.get(model='npc'))
                                               .filter(q)],
                     'players': [ContentSerializer(x).data
-                                for x in contents.filter(content_type=ContentType.objects.get(pk=17))
+                                for x in contents.filter(content_type=ContentType.objects.get(model='player'))
                                                  .filter(q)
                                                  .exclude(pk=self.player_content.pk)],
                     'items': [ContentSerializer(x).data
-                              for x in contents.filter(content_type=ContentType.objects.get(pk=22))
+                              for x in contents.filter(content_type=ContentType.objects.get(model='item'))
                                                .filter(q)]
                     }
 
