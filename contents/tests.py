@@ -3,8 +3,8 @@ from django.contrib.gis.geos import Point
 from django.core.management import call_command
 
 from base.tests import BaseTestCase
-from character.factories import PlayerFactory
-from character.models import NPC
+from character.factories import UserFactory
+from character.models import NPC, Player
 from game.factories import GameFactory
 from game.models import Game
 from owner.models import Owner
@@ -28,7 +28,8 @@ class ContentTestCase(BaseTestCase):
         self.game = GameFactory.create()
         owner = Owner(player=self.player, game=self.game)
         owner.save()
-        self.content_player = ContentPlayerFactory.create(game_id=self.game.pk)
+        self.content_player = ContentPlayerFactory.create(game_id=self.game.pk,
+                                                          content=self.player)
         self.content_npc = ContentNPCFactory.create(game_id=self.game.pk)
         self.content_item = ContentItemFactory.create(
             game_id=self.game.pk,
@@ -138,7 +139,8 @@ class ContentTestCase(BaseTestCase):
         response = self.client.delete('/content/{}/'.format(self.content_item.pk))
         self.assertEqual(response.status_code, 401)
 
-        player = PlayerFactory.create()
+        self.user = UserFactory.create()
+        player = Player.objects.get(user=self.user)
         self.client.authenticate(player.user.username, 'qweqweqwe')
         response = self.client.delete('/content/{}/'.format(self.content_item.pk))
         self.assertEqual(response.status_code, 404)
