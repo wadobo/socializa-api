@@ -1,12 +1,17 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import FieldError
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, views, status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS, IsAuthenticated
+from rest_framework.response import Response
 
 from owner.models import Owner
 from .models import Game
+from character.models import Player
 from .serializers import GameSerializer
-
+from contents.models import Content
 
 class GameListCreate(generics.ListCreateAPIView):
     serializer_class = GameSerializer
@@ -45,3 +50,38 @@ class GameDetail(generics.RetrieveUpdateDestroyAPIView):
             player = self.request.user.character_player
             games = Game.objects.filter(owners__in=player.owners.all())
         return games
+
+
+class PlayerJoinToGame(views.APIView):
+    """
+    This call should add Player to Content in a give position.
+    Player will be the player that realize call.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, *args, **kwargs):
+        game = get_object_or_404(Game, pk=kwargs['pk'])
+        position = self.request.data.get("position", None)
+        player = Player.objects.get(user=self.request.user)
+        content_type = ContentType.objects.get(model='player')
+
+        if not position or not position['longitude'] or not position['latitude']:
+            return Response({"message": "Position error"},
+                            status.HTTP_400_BAD_REQUEST)
+
+        content = Content.objects.filter(game=game,
+                                         content_type=content_type,
+                                         content_id=player.pk).first()
+        position_point = Point(position['longitude'], position['latitude'])
+
+        if not content:
+            Content.objects.create(game=game,
+                                   content_type=content_type,
+                                   content_id=player.pk,
+                                   position=position_point)
+            return Response({}, status.HTTP_201_CREATED)
+        else:
+            content.position = position_point
+            content.save()
+            return Response({}, status.HTTP_200_OK)

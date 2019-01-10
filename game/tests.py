@@ -216,3 +216,64 @@ class GameContentTestCase(BaseTestCase):
             response = self.client.post('/content/', content)
             self.assertEqual(response.status_code, 201)
         self.assertEqual(Content.objects.count(), 3)
+
+
+class PlayerJoinToGameTestCase(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.game = GameFactory.create()
+
+        self.ct_player = ContentType.objects.get(model='player').pk
+        self.ct_npc = ContentType.objects.get(model='npc').pk
+        self.ct_item = ContentType.objects.get(model='item').pk
+        self.ct_knowledge = ContentType.objects.get(model='knowledge').pk
+        self.ct_rol = ContentType.objects.get(model='rol').pk
+
+    def test_player_join_to_game_without_autentication(self):
+        game_id = Game.objects.first().pk
+        data = {
+            'position': {
+                'longitude': 37.201421,
+                'latitude': -6.9447224
+            }
+        }
+        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        self.assertEqual(response.status_code, 401)
+
+    def test_player_join_to_game_content_not_exist(self):
+        self.authenticate()
+        game_id = Game.objects.first().pk
+        data = {
+            'position': {
+                'longitude': 37.201421,
+                'latitude': -6.9447224
+            }
+        }
+        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        self.assertEqual(response.status_code, 201)
+
+    def test_player_join_to_game_content_exist(self):
+        self.authenticate()
+        game_id = Game.objects.first().pk
+        data = {
+            'position': {
+                'longitude': 37.201421,
+                'latitude': -6.9447224
+            }
+        }
+        self.client.post('/game/{}/join/'.format(game_id), data)
+        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        self.assertEqual(response.status_code, 200)
+
+    def test_player_join_to_game_game_not_exist(self):
+        self.authenticate()
+        game_id = 999
+        data = {
+            'position': {
+                'longitude': 37.201421,
+                'latitude': -6.9447224
+            }
+        }
+        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        self.assertEqual(response.status_code, 404)
