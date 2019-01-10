@@ -42,6 +42,7 @@ class ContentTypes(views.APIView):
 
     def get(self, request, version, *args, **kwargs):
         content_types_list = ('player', 'npc', 'knowledge', 'item', 'rol')
-        content_types = ContentType.objects.filter(model__in=content_types_list)
-        result =  {c.pk: c.model for c in content_types}
+        content_types = ContentType.objects.filter(
+            model__in=content_types_list)
+        result = {c.pk: c.model for c in content_types}
         return Response(result)

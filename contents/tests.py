@@ -228,3 +228,9 @@ class ContentTestCase(BaseTestCase):
             self.assertTrue('content' in response.json().keys())
             self.assertEqual(response.json().get('content_type'),
                              content.content_type.pk)
+
+    def test_content_types(self):
+        self.authenticate()
+        response = self.client.get('/content/types/')
+        for content_type in response.data.values():
+            self.assertTrue(content_type in ('npc', 'player', 'item', 'knowledge', 'rol'))
