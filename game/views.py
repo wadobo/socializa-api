@@ -1,4 +1,6 @@
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.gis.measure import D
 from django.core.exceptions import FieldError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
@@ -52,6 +54,41 @@ class GameDetail(generics.RetrieveUpdateDestroyAPIView):
             player = self.request.user.character_player
             games = Game.objects.filter(owners__in=player.owners.all())
         return games
+
+
+class GameStatusForPlayer(views.APIView):
+    """
+    This call return everycontents of game that is near player.
+    Call format: GET /api/{version}/game/{game_pk}/status/
+    """
+
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get(self, request, version, pk, *args, **kwargs):
+        self.player = Player.objects.get(user=request.user)
+        player_ctype = ContentType.objects.get(model='player')
+        self.player_content = get_object_or_404(
+            Content, content_type=player_ctype, content_id=self.player.pk)
+        game = get_object_or_404(Game, pk=pk)
+        contents = Content.objects.filter(game=game)
+
+        q = Q(position__distance_lte=(self.player_content.position,
+                                      D(m=game.preferences.vision_distance)))
+
+        result = {
+            'npcs': [ContentSerializer(x).data
+                     for x in contents.filter(content_type=ContentType.objects.get(model='npc'))
+                                      .filter(q)],
+            'players': [ContentSerializer(x).data
+                        for x in contents.filter(content_type=ContentType.objects.get(model='player'))
+                                         .filter(q)
+                                         .exclude(pk=self.player_content.pk)],
+            'items': [ContentSerializer(x).data
+                      for x in contents.filter(content_type=ContentType.objects.get(model='item'))
+                                       .filter(q)]
+        }
+
+        return Response(result)
 
 
 class PlayerJoinToGame(views.APIView):
