@@ -2,19 +2,19 @@ from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.gis.measure import D
 from django.core.exceptions import FieldError
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, views
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS
+from rest_framework import generics, views, status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 
-
+from character.models import Player
+from contents.models import Content
+from contents.serializers import ContentSerializer
 from owner.models import Owner
 from .models import Game
 from .serializers import GameSerializer
-from character.models import Player
-from contents.serializers import ContentSerializer
-from contents.models import Content
-from django.contrib.contenttypes.models import ContentType
 
 
 class GameListCreate(generics.ListCreateAPIView):
@@ -89,3 +89,35 @@ class GameStatusForPlayer(views.APIView):
         }
 
         return Response(result)
+
+
+class PlayerJoinToGame(views.APIView):
+    """
+    This call should add Player to Content in a give position.
+    Player will be the player that realize call.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, *args, **kwargs):
+        game = get_object_or_404(Game, pk=kwargs['pk'])
+        position = self.request.data.get("position", None)
+        player = Player.objects.get(user=self.request.user)
+        content_type = ContentType.objects.get(model='player')
+        data = {
+            'game': game.pk,
+            'content_type': content_type.pk,
+            'content_id': player.pk,
+            'position': position
+        }
+        instance = Content.objects.filter(game=game, content_id=player.pk,
+                                         content_type=content_type)
+        if instance.exists():
+            content_ser = ContentSerializer(instance.first(), data=data)
+            st = status.HTTP_200_OK
+        else:
+            content_ser = ContentSerializer(data=data)
+            st = status.HTTP_201_CREATED
+        content_ser.is_valid(raise_exception=True)
+        content = content_ser.save()
+        return Response({}, st)
