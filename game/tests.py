@@ -3,6 +3,7 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from base.tests import BaseTestCase
+from contents.factories import ContentPlayerFactory
 from contents.models import Content
 from owner.models import Owner
 from things.factories import ItemFactory
@@ -229,51 +230,43 @@ class PlayerJoinToGameTestCase(BaseTestCase):
         self.ct_item = ContentType.objects.get(model='item').pk
         self.ct_knowledge = ContentType.objects.get(model='knowledge').pk
         self.ct_rol = ContentType.objects.get(model='rol').pk
-
-    def test_player_join_to_game_without_autentication(self):
-        game_id = Game.objects.first().pk
-        data = {
+        self.data = {
             'position': {
                 'longitude': 37.201421,
                 'latitude': -6.9447224
             }
         }
-        response = self.client.post('/game/{}/join/'.format(game_id), data)
+
+    def test_player_join_to_game_without_autentication(self):
+        response = self.client.post('/game/{}/join/'.format(self.game.pk),
+                                    self.data)
         self.assertEqual(response.status_code, 401)
 
     def test_player_join_to_game_content_not_exist(self):
         self.authenticate()
-        game_id = Game.objects.first().pk
-        data = {
-            'position': {
-                'longitude': 37.201421,
-                'latitude': -6.9447224
-            }
-        }
-        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        response = self.client.post('/game/{}/join/'.format(self.game.pk),
+                                    self.data)
         self.assertEqual(response.status_code, 201)
 
     def test_player_join_to_game_content_exist(self):
         self.authenticate()
-        game_id = Game.objects.first().pk
-        data = {
-            'position': {
-                'longitude': 37.201421,
-                'latitude': -6.9447224
-            }
-        }
-        self.client.post('/game/{}/join/'.format(game_id), data)
-        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        ContentPlayerFactory.create(game_id=self.game.pk, content=self.player)
+        response = self.client.post('/game/{}/join/'.format(self.game.pk),
+                                    self.data)
         self.assertEqual(response.status_code, 200)
 
     def test_player_join_to_game_game_not_exist(self):
         self.authenticate()
-        game_id = 999
-        data = {
-            'position': {
-                'longitude': 37.201421,
-                'latitude': -6.9447224
-            }
-        }
-        response = self.client.post('/game/{}/join/'.format(game_id), data)
+        response = self.client.post('/game/{}/join/'.format(self.game.pk + 1),
+                                    self.data)
         self.assertEqual(response.status_code, 404)
+
+    def test_player_join_bad_requests(self):
+        self.authenticate()
+        data = {'pos': {}}
+        response = self.client.post('/game/{}/join/'.format(self.game.pk), data)
+        self.assertEqual(response.status_code, 400)
+
+        data = {'position': {'latitude': -6.9447224}}
+        response = self.client.post('/game/{}/join/'.format(self.game.pk), data)
+        self.assertEqual(response.status_code, 400)

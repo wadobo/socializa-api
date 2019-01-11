@@ -7,11 +7,13 @@ from rest_framework import generics, views, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 
+from character.models import Player
+from contents.models import Content
+from contents.serializers import ContentSerializer
 from owner.models import Owner
 from .models import Game
-from character.models import Player
 from .serializers import GameSerializer
-from contents.models import Content
+
 
 class GameListCreate(generics.ListCreateAPIView):
     serializer_class = GameSerializer
@@ -65,23 +67,20 @@ class PlayerJoinToGame(views.APIView):
         position = self.request.data.get("position", None)
         player = Player.objects.get(user=self.request.user)
         content_type = ContentType.objects.get(model='player')
-
-        if not position or not position['longitude'] or not position['latitude']:
-            return Response({"message": "Position error"},
-                            status.HTTP_400_BAD_REQUEST)
-
-        content = Content.objects.filter(game=game,
-                                         content_type=content_type,
-                                         content_id=player.pk).first()
-        position_point = Point(position['longitude'], position['latitude'])
-
-        if not content:
-            Content.objects.create(game=game,
-                                   content_type=content_type,
-                                   content_id=player.pk,
-                                   position=position_point)
-            return Response({}, status.HTTP_201_CREATED)
+        data = {
+            'game': game.pk,
+            'content_type': content_type.pk,
+            'content_id': player.pk,
+            'position': position
+        }
+        instance = Content.objects.filter(game=game, content_id=player.pk,
+                                         content_type=content_type)
+        if instance.exists():
+            content_ser = ContentSerializer(instance.first(), data=data)
+            st = status.HTTP_200_OK
         else:
-            content.position = position_point
-            content.save()
-            return Response({}, status.HTTP_200_OK)
+            content_ser = ContentSerializer(data=data)
+            st = status.HTTP_201_CREATED
+        content_ser.is_valid(raise_exception=True)
+        content = content_ser.save()
+        return Response({}, st)
