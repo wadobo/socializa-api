@@ -9,7 +9,7 @@ from factory import (
         SubFactory
 )
 
-from character.factories import NPCFactory, PlayerFactory
+from character.factories import NPCFactory
 from things.factories import ItemFactory, KnowledgeFactory, RolFactory
 from .models import Content
 
@@ -34,7 +34,7 @@ class ContentFactory(DjangoModelFactory):
 
 
 class ContentPlayerFactory(ContentFactory):
-    content = SubFactory(PlayerFactory)
+    """ Need content like param because PlayerFactory not exist. """
 
     class Meta:
         model = Content

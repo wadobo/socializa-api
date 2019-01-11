@@ -1,7 +1,7 @@
 from django.core.management import call_command
 from rest_framework.test import APITestCase
 
-from character.factories import PlayerFactory
+from character.factories import UserFactory
 from character.models import Player
 from .client import BaseClient
 
@@ -11,7 +11,8 @@ class BaseTestCase(APITestCase):
     def setUp(self):
         call_command('socialapps')
         self.client = BaseClient()
-        self.player = PlayerFactory.create()
+        self.user = UserFactory.create()
+        self.player = Player.objects.get(user=self.user)
 
     def tearDown(self):
         self.client = None
