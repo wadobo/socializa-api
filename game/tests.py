@@ -9,7 +9,8 @@ from things.factories import ItemFactory
 from .factories import GameFactory
 from .models import Game
 from .serializers import GameSerializer
-
+from character.models import Player, NPC
+from character.factories import NPCFactory
 
 class GameTestCase(BaseTestCase):
 
@@ -216,3 +217,92 @@ class GameContentTestCase(BaseTestCase):
             response = self.client.post('/content/', content)
             self.assertEqual(response.status_code, 201)
         self.assertEqual(Content.objects.count(), 3)
+
+
+class GameStatusForPlayerTestCase(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.npc = NPCFactory.create()
+
+        self.ct_player = ContentType.objects.get(model='player').pk
+        self.ct_npc = ContentType.objects.get(model='npc').pk
+        self.ct_item = ContentType.objects.get(model='item').pk
+        self.ct_knowledge = ContentType.objects.get(model='knowledge').pk
+        self.ct_rol = ContentType.objects.get(model='rol').pk
+
+    def test_game_status_for_player(self):
+        self.authenticate()
+        data = {
+            'title': 'My game',
+            'description': 'Example game',
+            'start': timezone.now().isoformat(),
+            'preferences': {
+                'vision_distance': 100,
+                'meeting_distance': 10,
+                'visible_character': True
+            },
+            'contents': [
+                {  # New, Player
+                    'content_type': self.ct_player,
+                    'content_id': Player.objects.first().pk,
+                    'position': {
+                        'longitude': 37.241421,
+                        'latitude': -6.9447224
+                    },
+                },
+                {  # New, Player
+                    'content_type': self.ct_npc,
+                    'content_id': NPC.objects.first().pk,
+                    'position': {
+                        'longitude': 37.241421,
+                        'latitude': -6.9447224
+                    },
+                },
+                {  # New, near item
+                    'content_type': self.ct_item,
+                    'content_id': 0,
+                    'content': {
+                        'name': 'key 1',
+                        'description': 'key number 1',
+                        'pickable': True,
+                        'shareable': False,
+                        'consumable': False,
+                    },
+                    'position': {
+                        'longitude': 37.241421,
+                        'latitude': -6.9447224
+                    },
+                },
+                {  # New, far item
+                    'content_type': self.ct_item,
+                    'content_id': 0,
+                    'content': {
+                        'name': 'key 2',
+                        'description': 'key number 2',
+                        'pickable': True,
+                        'shareable': False,
+                        'consumable': False,
+                    },
+                    'position': {
+                        'longitude': 80.241421,
+                        'latitude': -60.9447224
+                    },
+                },
+            ]
+        }
+
+        ## Create game
+        response = self.client.post('/game/', data)
+        game_id = response.json().get('id')
+
+        ## Create contents
+        for content in data.pop('contents'):
+            content.update({'game': game_id})
+            response = self.client.post('/content/', content)
+
+        response = self.client.get('/game/{}/status/'.format(str(game_id)))
+
+        self.assertEqual(len(response.data.get('npcs')) , 1)
+        self.assertEqual(len(response.data.get('players')) , 0)
+        self.assertEqual(len(response.data.get('items')) , 1)
